@@ -1,0 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-sans bg-slate-950 text-slate-100 transition-colors duration-300;
+  }
+
+  body.light {
+    @apply bg-slate-50 text-slate-900;
+  }
+}
+
+@layer components {
+  /* Premium Glassmorphism Card styling */
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl transition-all duration-300;
+  }
+  
+  .light .glass-card {
+    @apply bg-slate-900/5 backdrop-blur-xl border border-slate-900/10;
+  }
+
+  .glass-panel {
+    @apply bg-slate-950/40 backdrop-blur-md border-b border-white/5;
+  }
+
+  .light .glass-panel {
+    @apply bg-white/40 backdrop-blur-md border-b border-slate-900/5;
+  }
+
+  /* 3D Button glow */
+  .btn-3d {
+    @apply relative overflow-hidden transition-all duration-300 transform active:scale-95;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Shimmer / Skeleton Animation */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.03) 25%,
+      rgba(255, 255, 255, 0.08) 50%,
+      rgba(255, 255, 255, 0.03) 75%
+    );
+    background-size: 200% 100%;
+    animation: loading-shimmer 1.5s infinite;
+  }
+
+  .light .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.03) 25%,
+      rgba(0, 0, 0, 0.08) 50%,
+      rgba(0, 0, 0, 0.03) 75%
+    );
+    background-size: 200% 100%;
+    animation: loading-shimmer 1.5s infinite;
+  }
+}
+
+@keyframes loading-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Custom 3D Tilt Wrapper */
+.tilt-card-container {
+  perspective: 1000px;
+}
+
+.tilt-card {
+  transition: transform 0.1s ease;
+  transform-style: preserve-3d;
+}
+
+.tilt-card-inner {
+  transform: translateZ(50px);
+}
+
+/* Hide default scrollbars but keep functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
