@@ -1,40 +1,67 @@
 import React from 'react';
-import { BookOpen, Github, MessageSquare, Phone } from 'lucide-react';
+import { BookOpen, Github, MessageSquare, Phone, Mail } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="relative mt-20 border-t border-white/5 bg-slate-950/80 backdrop-blur-md py-12 transition-colors duration-300 light:bg-slate-100 light:border-slate-200">
+    <footer className="relative mt-20 border-t border-white/10 bg-[#002d40] py-12 text-slate-300 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo & Description */}
           <div className="md:col-span-2 space-y-4">
-            <div className="flex items-center gap-2 text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-purple-500 font-display">
-              <BookOpen className="h-6 w-6 text-brand-500" />
-              <span>Readora</span>
+            <div className="flex items-center gap-2">
+              {/* Emblem Logo */}
+              <div className="h-16 w-20 overflow-hidden flex items-center justify-center shrink-0">
+                <img 
+                  src="/readaura_emblem.png" 
+                  alt="ReadAura Emblem" 
+                  style={{
+                    filter: 'invert(1) hue-rotate(180deg) brightness(1.2) contrast(1.2)',
+                    mixBlendMode: 'screen'
+                  }}
+                  className="max-h-none w-full h-full object-contain"
+                />
+              </div>
+
+              {/* Text Logo */}
+              <div className="h-16 w-48 overflow-hidden flex items-center justify-center shrink-0">
+                <img 
+                  src="/readaura_text_logo.png" 
+                  alt="ReadAura Text" 
+                  style={{
+                    filter: 'invert(1) hue-rotate(180deg) brightness(1.2) contrast(1.2)',
+                    mixBlendMode: 'screen'
+                  }}
+                  className="max-h-none w-full h-full object-contain"
+                />
+              </div>
             </div>
-            <p className="text-sm text-slate-400 max-w-sm leading-relaxed light:text-slate-600">
+            <p className="text-sm text-slate-350 max-w-sm leading-relaxed">
               An advanced, premium digital storefront offering curated literature, seamless WhatsApp order processing, and a high-fidelity 3D reader atmosphere.
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-sm font-semibold text-slate-200 uppercase tracking-wider mb-4 light:text-slate-800">Explore</h4>
-            <ul className="space-y-2 text-sm text-slate-400 light:text-slate-600">
-              <li><a href="/" className="hover:text-brand-400 transition-colors">Home</a></li>
-              <li><a href="/books" className="hover:text-brand-400 transition-colors">All Books</a></li>
-              <li><a href="/about" className="hover:text-brand-400 transition-colors">About Us</a></li>
-              <li><a href="/cart" className="hover:text-brand-400 transition-colors">My Bag</a></li>
+            <h4 className="text-sm font-bold text-[#38bdf8] uppercase tracking-wider mb-4">Explore</h4>
+            <ul className="space-y-2 text-sm text-slate-300">
+              <li><a href="/" className="hover:text-[#38bdf8] transition-colors">Home</a></li>
+              <li><a href="/books" className="hover:text-[#38bdf8] transition-colors">All Books</a></li>
+              <li><a href="/about" className="hover:text-[#38bdf8] transition-colors">About Us</a></li>
+              <li><a href="/cart" className="hover:text-[#38bdf8] transition-colors">My Bag</a></li>
             </ul>
           </div>
 
           {/* Checkout & Support */}
           <div>
-            <h4 className="text-sm font-semibold text-slate-200 uppercase tracking-wider mb-4 light:text-slate-800">Support</h4>
-            <div className="space-y-3 text-sm text-slate-400 light:text-slate-600">
+            <h4 className="text-sm font-bold text-[#38bdf8] uppercase tracking-wider mb-4">Support</h4>
+            <div className="space-y-3 text-sm text-slate-300">
               <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-brand-400" />
-                <span>+94 77 123 4567</span>
+                <Phone className="h-4 w-4 text-[#38bdf8]" />
+                <span>+94 76 657 2148</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-[#38bdf8]" />
+                <a href="mailto:nextwavetechlabs@gmail.com" className="hover:text-[#38bdf8] transition-colors">nextwavetechlabs@gmail.com</a>
               </div>
               <div className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4 text-emerald-400" />
@@ -44,10 +71,10 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-white/5 light:border-slate-200 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© {new Date().getFullYear()} Readora. All rights reserved.</p>
+        <div className="mt-12 pt-8 border-t border-white/10 text-center text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p>© {new Date().getFullYear()} ReadAura. All rights reserved. Developed by <span className="text-[#38bdf8] font-bold">NextWave Tech Labs</span></p>
           <div className="flex space-x-4">
-            <span className="px-2.5 py-1 rounded bg-white/5 border border-white/10 text-[10px] uppercase font-bold text-slate-400 tracking-wider light:bg-slate-900/5 light:border-slate-900/10 light:text-slate-600">
+            <span className="px-2.5 py-1 rounded bg-white/5 border border-white/10 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
               WhatsApp Integration Enabled
             </span>
           </div>

@@ -1,14 +1,24 @@
 import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Eye } from 'lucide-react';
+import { ShoppingBag, Eye, Heart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useWishlist } from '../context/WishlistContext';
 
 export default function BookCard({ book }) {
   const { addToCart } = useCart();
   const { user } = useAuth();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const navigate = useNavigate();
   const cardRef = useRef(null);
+
+  const isWishlisted = isInWishlist(book._id);
+
+  const handleWishlistToggle = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWishlist(book);
+  };
 
   // Mouse move tilt effect state
   const [rotateX, setRotateX] = useState(0);
@@ -62,18 +72,20 @@ export default function BookCard({ book }) {
       style={{
         transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`,
         transition: 'transform 0.15s ease-out',
-        transformStyle: 'preserve-3d'
+        transformStyle: 'preserve-3d',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden'
       }}
       className="group relative flex flex-col justify-between h-[450px] p-4 glass-card shadow-3d-glow hover:shadow-3d-glow-hover transition-shadow duration-300 overflow-hidden"
     >
       {/* 3D Inner Layer - Card Content */}
       <div style={{ transform: 'translateZ(30px)' }} className="flex-1 flex flex-col">
         {/* Cover Image Container */}
-        <div className="relative w-full h-56 rounded-xl overflow-hidden mb-4 bg-slate-900 flex items-center justify-center border border-white/5">
+        <div className="relative w-full h-56 rounded-xl overflow-hidden mb-4 bg-slate-950/40 light:bg-slate-100/60 flex items-center justify-center border border-white/5 light:border-slate-200">
           <img 
             src={book.coverImage} 
             alt={book.title} 
-            className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-contain transform group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
           />
           {/* Overlay Actions on Hover */}
@@ -93,6 +105,15 @@ export default function BookCard({ book }) {
               <ShoppingBag className="h-5 w-5" />
             </button>
           </div>
+
+          {/* Wishlist Heart Button overlay */}
+          <button
+            onClick={handleWishlistToggle}
+            className="absolute bottom-3 right-3 z-10 w-9 h-9 rounded-full flex items-center justify-center bg-[#075985] hover:bg-[#0369a1] border border-[#f59e0b]/40 text-[#f59e0b] shadow-md backdrop-blur-sm transition-all transform hover:scale-110 active:scale-95 cursor-pointer"
+            title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+          >
+            <Heart className={`h-4.5 w-4.5 ${isWishlisted ? 'fill-[#f59e0b]' : 'fill-none'}`} />
+          </button>
           
           {/* Category Tag */}
           <span className="absolute top-3 left-3 px-2.5 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wider bg-brand-600/90 text-white backdrop-blur-md">

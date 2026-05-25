@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingBag, ArrowLeft, Star, FileText, CheckCircle, ShieldCheck, ChevronRight } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, Star, FileText, CheckCircle, ShieldCheck, ChevronRight, Heart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useWishlist } from '../context/WishlistContext';
 import BookCard from '../components/BookCard';
 import { API_BASE_URL } from '../config';
 
@@ -12,11 +13,17 @@ export default function BookDetails() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { user } = useAuth();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   
   const [book, setBook] = useState(null);
   const [relatedBooks, setRelatedBooks] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
+
+  const isWishlisted = book ? isInWishlist(book._id) : false;
+  const handleWishlistToggle = () => {
+    if (book) toggleWishlist(book);
+  };
 
   // 3D Tilt Cover States
   const [rotateX, setRotateX] = useState(0);
@@ -40,59 +47,9 @@ export default function BookDetails() {
           setRelatedBooks(relData.filter(b => b._id !== id).slice(0, 3));
         }
       } catch (error) {
-        console.warn("Backend server offline, loading static details fallback.");
-        
-        // Static catalog search mock
-        const mockCatalog = [
-          {
-            _id: "book_1",
-            title: "The Alchemist",
-            author: "Paulo Coelho",
-            price: 1800,
-            category: "Fiction",
-            description: "A gorgeous fable about following your dreams. The Alchemist has established itself as a modern classic, universally admired. Constantly reminding us of the power of listening to our hearts.",
-            coverImage: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600",
-            rating: 4.8,
-            stock: 12
-          },
-          {
-            _id: "book_2",
-            title: "Atomic Habits",
-            author: "James Clear",
-            price: 2400,
-            category: "Business",
-            description: "No matter your goals, Atomic Habits offers a proven framework for improving—every day. James Clear, one of the world's leading experts on habit formation, reveals practical strategies.",
-            coverImage: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=600",
-            rating: 4.9,
-            stock: 25
-          },
-          {
-            _id: "book_3",
-            title: "Educated",
-            author: "Tara Westover",
-            price: 2100,
-            category: "Education",
-            description: "An unforgettable memoir about a young girl who, kept out of school, leaves her survivalist family and goes on to earn a PhD from Cambridge University.",
-            coverImage: "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=600",
-            rating: 4.7,
-            stock: 8
-          },
-          {
-            _id: "book_4",
-            title: "Thinking, Fast and Slow",
-            author: "Daniel Kahneman",
-            price: 2900,
-            category: "Business",
-            description: "Daniel Kahneman, the renowned psychologist and winner of the Nobel Prize in Economics, takes us on a groundbreaking tour of the mind.",
-            coverImage: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=600",
-            rating: 4.6,
-            stock: 15
-          }
-        ];
-
-        const fallbackBook = mockCatalog.find(b => b._id === id) || mockCatalog[0];
-        setBook(fallbackBook);
-        setRelatedBooks(mockCatalog.filter(b => b._id !== fallbackBook._id && b.category === fallbackBook.category).slice(0, 3));
+        console.error("Error fetching book details:", error);
+        setBook(null);
+        setRelatedBooks([]);
       } finally {
         setLoading(false);
       }
@@ -169,21 +126,23 @@ export default function BookDetails() {
       {/* Book Metadata Grid */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-12 items-start">
         {/* Cover Preview (3D interaction) */}
-        <div className="md:col-span-5 flex justify-center sticky top-28">
+        <div className="md:col-span-5 flex justify-center md:sticky md:top-28">
           <div 
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             style={{
               transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
               transition: 'transform 0.1s ease-out',
-              transformStyle: 'preserve-3d'
+              transformStyle: 'preserve-3d',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden'
             }}
-            className="w-72 sm:w-80 h-[450px] sm:h-[500px] rounded-2xl overflow-hidden bg-slate-900 border border-white/10 shadow-3d-glow transform-gpu"
+            className="w-72 sm:w-80 h-[450px] sm:h-[500px] rounded-2xl overflow-hidden bg-slate-950/40 light:bg-slate-100/60 flex items-center justify-center border border-white/10 light:border-slate-200 shadow-3d-glow transform-gpu"
           >
             <img 
               src={book.coverImage} 
               alt={book.title} 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
             />
           </div>
         </div>
@@ -261,6 +220,19 @@ export default function BookDetails() {
             >
               <ShoppingBag className="h-5 w-5" />
               <span>Add {quantity} to Bag • {(book.price * quantity).toLocaleString()} LKR</span>
+            </button>
+
+            {/* Wishlist Button */}
+            <button
+              onClick={handleWishlistToggle}
+              className={`p-4.5 rounded-xl flex items-center justify-center border transition-all active:scale-95 shrink-0 ${
+                isWishlisted 
+                  ? 'bg-[#075985]/20 border-[#f59e0b] text-[#f59e0b]' 
+                  : 'bg-white/5 border-white/10 text-slate-400 hover:text-slate-200 light:bg-slate-200/50 light:border-slate-350 light:text-slate-600 light:hover:text-slate-800'
+              }`}
+              title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+            >
+              <Heart className={`h-6 w-6 ${isWishlisted ? 'fill-[#f59e0b]' : 'fill-none'}`} />
             </button>
           </div>
 

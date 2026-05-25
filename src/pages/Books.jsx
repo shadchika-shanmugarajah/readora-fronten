@@ -4,11 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, Search, SlidersHorizontal, BookOpen } from 'lucide-react';
 import BookCard from '../components/BookCard';
 import { API_BASE_URL } from '../config';
+import { useWishlist } from '../context/WishlistContext';
 
 export default function Books() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { wishlistItems } = useWishlist();
+  const showWishlistOnly = searchParams.get('wishlist') === 'true';
   
   // Search, Category and Language state synchronized with URL search params
   const searchQuery = searchParams.get('search') || '';
@@ -16,7 +19,17 @@ export default function Books() {
   const selectedLanguage = searchParams.get('language') || 'All';
   const [localSearch, setLocalSearch] = useState(searchQuery);
 
-  const categories = ['All', 'Fiction', 'Business', 'Education', 'Science'];
+  const categories = [
+    'All',
+    'Fiction',
+    'Non Fiction',
+    'Children\'s Books',
+    'Competitive Exams',
+    'School Books',
+    'Magazines',
+    'Gifts',
+    'Stationery'
+  ];
   const languages = [
     { code: 'All', label: 'Shop All' },
     { code: 'Tamil', label: 'Tamil' },
@@ -29,6 +42,12 @@ export default function Books() {
   }, [searchQuery]);
 
   useEffect(() => {
+    if (showWishlistOnly) {
+      setBooks(wishlistItems);
+      setLoading(false);
+      return;
+    }
+
     const fetchBooks = async () => {
       setLoading(true);
       try {
@@ -50,106 +69,15 @@ export default function Books() {
           throw new Error();
         }
       } catch (error) {
-        console.warn("Backend server offline, using static mock catalog filtered offline.");
-        // Static Mock data fallback
-        const mockCatalog = [
-          {
-            _id: "book_1",
-            title: "The Alchemist",
-            author: "Paulo Coelho",
-            price: 1800,
-            category: "Fiction",
-            description: "A gorgeous fable about following your dreams. The Alchemist has established itself as a modern classic, universally admired.",
-            coverImage: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600",
-            rating: 4.8,
-            stock: 12,
-            language: "English"
-          },
-          {
-            _id: "book_2",
-            title: "Atomic Habits",
-            author: "James Clear",
-            price: 2400,
-            category: "Business",
-            description: "No matter your goals, Atomic Habits offers a proven framework for improving—every day.",
-            coverImage: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=600",
-            rating: 4.9,
-            stock: 25,
-            language: "English"
-          },
-          {
-            _id: "book_3",
-            title: "Educated",
-            author: "Tara Westover",
-            price: 2100,
-            category: "Education",
-            description: "An unforgettable memoir about a young girl who, kept out of school, leaves her survivalist family.",
-            coverImage: "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=600",
-            rating: 4.7,
-            stock: 8,
-            language: "English"
-          },
-          {
-            _id: "book_4",
-            title: "Thinking, Fast and Slow",
-            author: "Daniel Kahneman",
-            price: 2900,
-            category: "Business",
-            description: "Daniel Kahneman, the renowned psychologist, takes us on a groundbreaking tour of the mind.",
-            coverImage: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=600",
-            rating: 4.6,
-            stock: 15,
-            language: "English"
-          },
-          {
-            _id: "book_5",
-            title: "Ponniyin Selvan (Tamil)",
-            author: "Kalki Krishnamurthy",
-            price: 1500,
-            category: "Fiction",
-            description: "Ponniyin Selvan is a historic Tamil historical fiction novel by Kalki Krishnamurthy.",
-            coverImage: "https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?auto=format&fit=crop&q=80&w=600",
-            rating: 4.9,
-            stock: 12,
-            language: "Tamil"
-          },
-          {
-            _id: "book_6",
-            title: "Madol Doova (Sinhala)",
-            author: "Martin Wickramasinghe",
-            price: 850,
-            category: "Fiction",
-            description: "Madol Doova is a children's novel written by Martin Wickramasinghe.",
-            coverImage: "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=600",
-            rating: 4.7,
-            stock: 15,
-            language: "Sinhala"
-          }
-        ];
-
-        // Filter locally
-        let filtered = [...mockCatalog];
-        if (selectedCategory && selectedCategory !== 'All') {
-          filtered = filtered.filter(b => b.category.toLowerCase() === selectedCategory.toLowerCase());
-        }
-        if (selectedLanguage && selectedLanguage !== 'All') {
-          filtered = filtered.filter(b => b.language && b.language.toLowerCase() === selectedLanguage.toLowerCase());
-        }
-        if (searchQuery) {
-          const q = searchQuery.toLowerCase();
-          filtered = filtered.filter(b => 
-            b.title.toLowerCase().includes(q) || 
-            b.author.toLowerCase().includes(q)
-          );
-        }
-        setBooks(filtered);
+        console.error("Error fetching books:", error);
+        setBooks([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchBooks();
-  }, [searchQuery, selectedCategory, selectedLanguage]);
+  }, [searchQuery, selectedCategory, selectedLanguage, showWishlistOnly, wishlistItems]);
 
   const handleCategoryChange = (category) => {
     const params = new URLSearchParams(searchParams);
@@ -188,10 +116,13 @@ export default function Books() {
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4 border-b border-white/5 pb-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-display text-transparent bg-clip-text bg-gradient-to-r from-slate-100 to-slate-300 light:from-slate-800 light:to-slate-900">
-            Literature Catalogue
+            {showWishlistOnly ? 'My Wishlist' : 'Literature Catalogue'}
           </h1>
           <p className="text-sm text-slate-400 light:text-slate-500 mt-1">
-            Showing {books.length} premium books available for fast ordering
+            {showWishlistOnly 
+              ? `Showing ${books.length} saved books in your wishlist`
+              : `Showing ${books.length} premium books available for fast ordering`
+            }
           </p>
         </div>
 
@@ -242,7 +173,7 @@ export default function Books() {
                 <button
                   key={cat}
                   onClick={() => handleCategoryChange(cat)}
-                  className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all shrink-0 hover:bg-white/5 hover:translate-x-1 ${
+                  className={`w-auto lg:w-full text-center lg:text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all shrink-0 hover:bg-white/5 lg:hover:translate-x-1 ${
                     selectedCategory === cat
                       ? 'bg-brand-600 text-white font-bold hover:bg-brand-500 shadow-md shadow-brand-600/10'
                       : 'text-slate-400 hover:text-slate-200 light:text-slate-600 light:hover:text-slate-900'

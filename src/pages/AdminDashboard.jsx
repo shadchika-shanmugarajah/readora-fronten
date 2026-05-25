@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, Check, X, ShieldAlert, BarChart3, Package, Users, Tag, Image, BookOpen, ExternalLink, Save } from 'lucide-react';
+import { Plus, Edit, Trash2, Check, X, ShieldAlert, BarChart3, Package, Users, Tag, Image, BookOpen, ExternalLink, Save, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { API_BASE_URL } from '../config';
@@ -10,10 +10,11 @@ export default function AdminDashboard() {
   const { showToast } = useCart();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState('books'); // books, orders, analytics
+  const [activeTab, setActiveTab] = useState('books'); // books, orders, analytics, settings
   const [books, setBooks] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [bannerUrl, setBannerUrl] = useState(localStorage.getItem('book_store_hero_banner') || '/bookstore_hero_banner.png');
 
   // Form states for creating/editing book
   const [editingBookId, setEditingBookId] = useState(null); // null means creating
@@ -52,16 +53,9 @@ export default function AdminDashboard() {
         setOrders(ordersData);
 
       } catch (err) {
-        console.warn("Backend server offline. Running admin panel with simulated dataset.");
-        // Mock fallback data for dashboard demo
-        setBooks([
-          { _id: "book_1", title: "The Alchemist", author: "Paulo Coelho", price: 1800, category: "Fiction", stock: 12, featured: true, coverImage: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600" },
-          { _id: "book_2", title: "Atomic Habits", author: "James Clear", price: 2400, category: "Business", stock: 25, featured: true, coverImage: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=600" },
-          { _id: "book_3", title: "Educated", author: "Tara Westover", price: 2100, category: "Education", stock: 8, featured: false, coverImage: "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=600" }
-        ]);
-        setOrders([
-          { _id: "order_1", customerName: "Nimal Perera", customerPhone: "0771234568", customerAddress: "Colombo 03", totalPrice: 4800, status: "pending", createdAt: new Date().toISOString(), items: [{ title: "Atomic Habits", quantity: 2 }] }
-        ]);
+        console.error("Error fetching admin data:", err);
+        setBooks([]);
+        setOrders([]);
       } finally {
         setLoading(false);
       }
@@ -113,24 +107,8 @@ export default function AdminDashboard() {
         showToast(error.message || 'Error saving book details', 'error');
       }
     } catch (err) {
-      // Offline fallback simulation
-      const mockSavedBook = {
-        _id: editingBookId || 'book_mock_' + Date.now(),
-        ...bookFormData,
-        price: Number(bookFormData.price),
-        stock: Number(bookFormData.stock),
-        coverImage: bookFormData.coverImage || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=600'
-      };
-
-      if (editingBookId) {
-        setBooks(books.map(b => b._id === editingBookId ? mockSavedBook : b));
-        showToast('Book updated (Offline Simulation)');
-      } else {
-        setBooks([mockSavedBook, ...books]);
-        showToast('Book added (Offline Simulation)');
-      }
-      setShowBookForm(false);
-      resetBookForm();
+      console.error("Error saving book:", err);
+      showToast('Error saving book details. Please check connection.', 'error');
     }
   };
 
@@ -168,8 +146,8 @@ export default function AdminDashboard() {
         showToast('Failed to delete book.', 'error');
       }
     } catch (err) {
-      setBooks(books.filter(b => b._id !== bookId));
-      showToast('Book deleted (Offline Simulation)');
+      console.error("Error deleting book:", err);
+      showToast('Failed to delete book. Please check connection.', 'error');
     }
   };
 
@@ -191,8 +169,8 @@ export default function AdminDashboard() {
         showToast('Failed to update status.', 'error');
       }
     } catch (err) {
-      setOrders(orders.map(o => o._id === orderId ? { ...o, status: newStatus } : o));
-      showToast(`Order updated (Offline Simulation)`);
+      console.error("Error updating order status:", err);
+      showToast('Failed to update status. Please check connection.', 'error');
     }
   };
 
@@ -233,6 +211,33 @@ export default function AdminDashboard() {
       featured: false,
       language: 'English'
     });
+  };
+
+  const handleBannerSave = (e) => {
+    e.preventDefault();
+    localStorage.setItem('book_store_hero_banner', bannerUrl);
+    showToast('Hero banner configuration updated successfully!');
+  };
+
+  const handleBannerReset = () => {
+    setBannerUrl('/bookstore_hero_banner.png');
+    localStorage.setItem('book_store_hero_banner', '/bookstore_hero_banner.png');
+    showToast('Hero banner reset to original default.');
+  };
+
+  const handleBannerUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) {
+      showToast('Banner image size should be less than 8MB.', 'error');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setBannerUrl(reader.result);
+      showToast('Local banner image processed successfully!');
+    };
+    reader.readAsDataURL(file);
   };
 
   // Access validation: Access Denied screen
@@ -284,7 +289,8 @@ export default function AdminDashboard() {
         {[
           { id: 'books', name: 'Inventory Catalog', icon: <Package className="h-4 w-4" /> },
           { id: 'orders', name: 'WhatsApp Logged Orders', icon: <BookOpen className="h-4 w-4" /> },
-          { id: 'analytics', name: 'Analytics Board', icon: <BarChart3 className="h-4 w-4" /> }
+          { id: 'analytics', name: 'Analytics Board', icon: <BarChart3 className="h-4 w-4" /> },
+          { id: 'settings', name: 'Store Settings', icon: <Settings className="h-4 w-4" /> }
         ].map(t => (
           <button
             key={t.id}
@@ -292,7 +298,7 @@ export default function AdminDashboard() {
             className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-all border-b-2 ${
               activeTab === t.id
                 ? 'border-brand-500 text-brand-400 font-bold'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                : 'border-transparent text-slate-400 hover:text-slate-200 light:text-slate-600 light:hover:text-slate-900'
             }`}
           >
             {t.icon}
@@ -321,62 +327,66 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Title */}
                 <div className="space-y-1">
-                  <label className="text-slate-400 text-xs font-semibold">Book Title *</label>
+                  <label className="text-slate-400 light:text-slate-600 text-xs font-semibold">Book Title *</label>
                   <input
                     type="text"
                     value={bookFormData.title}
                     onChange={e => setBookFormData({ ...bookFormData, title: e.target.value })}
                     placeholder="e.g. The Alchemist"
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500/50 light:bg-white light:border-slate-300 light:text-slate-900"
                   />
                 </div>
 
                 {/* Author */}
                 <div className="space-y-1">
-                  <label className="text-slate-400 text-xs font-semibold">Author *</label>
+                  <label className="text-slate-400 light:text-slate-600 text-xs font-semibold">Author *</label>
                   <input
                     type="text"
                     value={bookFormData.author}
                     onChange={e => setBookFormData({ ...bookFormData, author: e.target.value })}
                     placeholder="e.g. Paulo Coelho"
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500/50 light:bg-white light:border-slate-300 light:text-slate-900"
                   />
                 </div>
 
                 {/* Price */}
                 <div className="space-y-1">
-                  <label className="text-slate-400 text-xs font-semibold">Price (LKR) *</label>
+                  <label className="text-slate-400 light:text-slate-600 text-xs font-semibold">Price (LKR) *</label>
                   <input
                     type="number"
                     value={bookFormData.price}
                     onChange={e => setBookFormData({ ...bookFormData, price: e.target.value })}
                     placeholder="e.g. 1800"
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500/50 light:bg-white light:border-slate-300 light:text-slate-900"
                   />
                 </div>
 
                 {/* Category */}
                 <div className="space-y-1">
-                  <label className="text-slate-400 text-xs font-semibold">Category *</label>
+                  <label className="text-slate-400 light:text-slate-600 text-xs font-semibold">Category *</label>
                   <select
                     value={bookFormData.category}
                     onChange={e => setBookFormData({ ...bookFormData, category: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/50 bg-slate-900"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/50 bg-slate-900 light:bg-white light:border-slate-300 light:text-slate-900"
                   >
                     <option value="Fiction">Fiction</option>
-                    <option value="Business">Business</option>
-                    <option value="Education">Education</option>
-                    <option value="Science">Science</option>
+                    <option value="Non Fiction">Non Fiction</option>
+                    <option value="Children's Books">Children's Books</option>
+                    <option value="Competitive Exams">Competitive Exams</option>
+                    <option value="School Books">School Books</option>
+                    <option value="Magazines">Magazines</option>
+                    <option value="Gifts">Gifts</option>
+                    <option value="Stationery">Stationery</option>
                   </select>
                 </div>
 
                 {/* Language */}
                 <div className="space-y-1">
-                  <label className="text-slate-400 text-xs font-semibold">Language *</label>
+                  <label className="text-slate-400 light:text-slate-600 text-xs font-semibold">Language *</label>
                   <select
                     value={bookFormData.language || 'English'}
                     onChange={e => setBookFormData({ ...bookFormData, language: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/50 bg-slate-900"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/50 bg-slate-900 light:bg-white light:border-slate-300 light:text-slate-900"
                   >
                     <option value="English">English</option>
                     <option value="Tamil">Tamil</option>
@@ -386,7 +396,7 @@ export default function AdminDashboard() {
 
                 {/* Cover Image */}
                 <div className="space-y-1 sm:col-span-2">
-                  <label className="text-slate-400 text-xs font-semibold flex items-center gap-1">
+                  <label className="text-slate-400 light:text-slate-600 text-xs font-semibold flex items-center gap-1">
                     <Image className="h-3.5 w-3.5" />
                     <span>Cover Image (URL or Local File Upload)</span>
                   </label>
@@ -397,7 +407,7 @@ export default function AdminDashboard() {
                       value={bookFormData.coverImage}
                       onChange={e => setBookFormData({ ...bookFormData, coverImage: e.target.value })}
                       placeholder="e.g. https://images.unsplash.com/photo-..."
-                      className="flex-grow px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+                      className="flex-grow px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 light:bg-white light:border-slate-300 light:text-slate-900"
                     />
                     
                     <div className="relative shrink-0">
@@ -418,18 +428,18 @@ export default function AdminDashboard() {
                   </div>
                   
                   {bookFormData.coverImage && (
-                    <div className="mt-3 flex items-center gap-3 bg-white/5 p-2 rounded-xl border border-white/5 max-w-lg">
-                      <div className="h-14 w-11 bg-slate-800 rounded border border-white/5 overflow-hidden shrink-0">
-                        <img src={bookFormData.coverImage} alt="Cover Preview" className="w-full h-full object-cover" />
+                    <div className="mt-3 flex items-center gap-3 bg-white/5 p-2 rounded-xl border border-white/5 max-w-lg light:bg-slate-100 light:border-slate-200">
+                      <div className="h-14 w-11 bg-slate-800 light:bg-slate-200 rounded border border-white/5 light:border-slate-350 overflow-hidden shrink-0 flex items-center justify-center">
+                        <img src={bookFormData.coverImage} alt="Cover Preview" className="w-full h-full object-contain" />
                       </div>
                       <div className="text-xs space-y-0.5 truncate flex-grow">
-                        <p className="font-semibold text-slate-200">Selected Image Preview</p>
-                        <p className="text-slate-400 text-[10px] truncate max-w-xs">{bookFormData.coverImage.startsWith('data:') ? 'Base64 Local Image Uploaded' : bookFormData.coverImage}</p>
+                        <p className="font-semibold text-slate-200 light:text-slate-800">Selected Image Preview</p>
+                        <p className="text-slate-400 light:text-slate-500 text-[10px] truncate max-w-xs">{bookFormData.coverImage.startsWith('data:') ? 'Base64 Local Image Uploaded' : bookFormData.coverImage}</p>
                       </div>
                       <button
                         type="button"
                         onClick={() => setBookFormData({ ...bookFormData, coverImage: '' })}
-                        className="px-2 py-1 rounded bg-white/5 text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 text-xs font-bold transition-all border border-white/5"
+                        className="px-2 py-1 rounded bg-white/5 text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 text-xs font-bold transition-all border border-white/5 light:bg-slate-200 light:border-slate-300"
                       >
                         Clear
                       </button>
@@ -439,12 +449,12 @@ export default function AdminDashboard() {
 
                 {/* Stock */}
                 <div className="space-y-1">
-                  <label className="text-slate-400 text-xs font-semibold">Stock quantity</label>
+                  <label className="text-slate-400 light:text-slate-600 text-xs font-semibold">Stock quantity</label>
                   <input
                     type="number"
                     value={bookFormData.stock}
                     onChange={e => setBookFormData({ ...bookFormData, stock: Number(e.target.value) })}
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500/50 light:bg-white light:border-slate-300 light:text-slate-900"
                   />
                 </div>
 
@@ -457,7 +467,7 @@ export default function AdminDashboard() {
                     onChange={e => setBookFormData({ ...bookFormData, featured: e.target.checked })}
                     className="h-4.5 w-4.5 accent-brand-600 rounded bg-white/5 border border-white/10 focus:outline-none cursor-pointer"
                   />
-                  <label htmlFor="featured" className="text-slate-300 font-semibold cursor-pointer">
+                  <label htmlFor="featured" className="text-slate-300 light:text-slate-700 font-semibold cursor-pointer">
                     Feature on landing page showcase
                   </label>
                 </div>
@@ -465,13 +475,13 @@ export default function AdminDashboard() {
 
               {/* Description */}
               <div className="space-y-1">
-                <label className="text-slate-400 text-xs font-semibold">Book Synopsis / Description *</label>
+                <label className="text-slate-400 light:text-slate-600 text-xs font-semibold">Book Synopsis / Description *</label>
                 <textarea
                   rows="4"
                   value={bookFormData.description}
                   onChange={e => setBookFormData({ ...bookFormData, description: e.target.value })}
                   placeholder="Enter summaries, synopsis, page count highlights..."
-                  className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500/50 light:bg-white light:border-slate-300 light:text-slate-900"
                 />
               </div>
 
@@ -504,14 +514,14 @@ export default function AdminDashboard() {
         </div>
       ) : activeTab === 'books' ? (
         /* Tab 1: Books Catalog Management */
-        <div className="glass-card border border-white/5 overflow-hidden">
-          <div className="p-5 border-b border-white/5 bg-slate-900/20 font-bold text-slate-200">
+        <div className="glass-card border border-white/5 light:border-slate-200 overflow-hidden">
+          <div className="p-5 border-b border-white/5 light:border-slate-200 bg-slate-900/20 font-bold text-slate-200 light:text-slate-800">
             Catalog Inventory Items ({books.length})
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-sm">
               <thead>
-                <tr className="border-b border-white/5 text-slate-400 text-xs uppercase font-semibold">
+                <tr className="border-b border-white/5 light:border-slate-200 text-slate-400 light:text-slate-500 text-xs uppercase font-semibold">
                   <th className="p-4">Cover</th>
                   <th className="p-4">Book Title / Author</th>
                   <th className="p-4">Category</th>
@@ -522,21 +532,21 @@ export default function AdminDashboard() {
                   <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-white/5 light:divide-slate-200">
                 {books.map(b => (
-                  <tr key={b._id} className="hover:bg-white/5 transition-colors">
+                  <tr key={b._id} className="hover:bg-white/5 light:hover:bg-slate-100/50 transition-colors">
                     {/* Cover image preview */}
                     <td className="p-4">
-                      <div className="h-12 w-10 bg-slate-800 rounded border border-white/5 overflow-hidden">
-                        <img src={b.coverImage} alt={b.title} className="w-full h-full object-cover" />
+                      <div className="h-12 w-10 bg-slate-800 light:bg-slate-200 rounded border border-white/5 light:border-slate-350 overflow-hidden flex items-center justify-center">
+                        <img src={b.coverImage} alt={b.title} className="w-full h-full object-contain" />
                       </div>
                     </td>
                     <td className="p-4">
-                      <div className="font-bold text-slate-200 truncate max-w-xs">{b.title}</div>
-                      <div className="text-slate-400 text-xs font-medium">by {b.author}</div>
+                      <div className="font-bold text-slate-200 light:text-slate-800 truncate max-w-xs">{b.title}</div>
+                      <div className="text-slate-400 light:text-slate-500 text-xs font-medium">by {b.author}</div>
                     </td>
                     <td className="p-4">
-                      <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-white/5 border border-white/10 text-slate-400">
+                      <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-white/5 border border-white/10 text-slate-400 light:bg-slate-100 light:border-slate-200 light:text-slate-600">
                         {b.category}
                       </span>
                     </td>
@@ -545,9 +555,9 @@ export default function AdminDashboard() {
                         {b.language || 'English'}
                       </span>
                     </td>
-                    <td className="p-4 font-bold font-display">{b.price.toLocaleString()} LKR</td>
+                    <td className="p-4 font-bold font-display text-slate-100 light:text-slate-800">{b.price.toLocaleString()} LKR</td>
                     <td className="p-4">
-                      <span className={`font-bold ${b.stock === 0 ? 'text-rose-400' : b.stock <= 3 ? 'text-amber-400' : 'text-slate-300'}`}>
+                      <span className={`font-bold ${b.stock === 0 ? 'text-rose-400' : b.stock <= 3 ? 'text-amber-400' : 'text-slate-300 light:text-slate-700'}`}>
                         {b.stock} units
                       </span>
                     </td>
@@ -555,7 +565,7 @@ export default function AdminDashboard() {
                       {b.featured ? (
                         <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 font-bold">Featured</span>
                       ) : (
-                        <span className="text-[10px] bg-slate-500/10 text-slate-400 px-2 py-0.5 rounded border border-slate-500/20 font-bold">Standard</span>
+                        <span className="text-[10px] bg-slate-500/10 text-slate-400 light:text-slate-500 px-2 py-0.5 rounded border border-slate-500/20 light:border-slate-300 font-bold">Standard</span>
                       )}
                     </td>
                     <td className="p-4 text-right">
@@ -587,10 +597,10 @@ export default function AdminDashboard() {
         <div className="space-y-4">
           {orders.length > 0 ? (
             orders.map(o => (
-              <div key={o._id} className="glass-card border border-white/5 p-5 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-white/5 pb-3 gap-3">
+              <div key={o._id} className="glass-card border border-white/5 light:border-slate-200 p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-white/5 light:border-slate-200 pb-3 gap-3">
                   <div>
-                    <h3 className="font-bold text-base text-slate-100 flex items-center gap-2">
+                    <h3 className="font-bold text-base text-slate-100 light:text-slate-800 flex items-center gap-2">
                       <span>Order: {o._id.slice(-6).toUpperCase()}</span>
                       <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
                         o.status === 'completed' 
@@ -630,33 +640,33 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                   {/* Items */}
                   <div className="space-y-2">
-                    <h4 className="font-semibold text-xs text-slate-400 uppercase tracking-wider">Ordered Books</h4>
+                    <h4 className="font-semibold text-xs text-slate-400 light:text-slate-500 uppercase tracking-wider">Ordered Books</h4>
                     <div className="space-y-1.5">
                       {o.items.map((item, index) => (
                         <div key={index} className="flex justify-between font-medium">
-                          <span className="text-slate-300">{item.title}</span>
-                          <span className="text-slate-400 font-bold">x {item.quantity}</span>
+                          <span className="text-slate-300 light:text-slate-700">{item.title}</span>
+                          <span className="text-slate-400 light:text-slate-500 font-bold">x {item.quantity}</span>
                         </div>
                       ))}
                     </div>
-                    <div className="border-t border-white/5 pt-2 flex justify-between font-bold text-slate-200">
+                    <div className="border-t border-white/5 light:border-slate-200 pt-2 flex justify-between font-bold text-slate-200 light:text-slate-800">
                       <span>Total Invoice</span>
                       <span className="font-display">{o.totalPrice.toLocaleString()} LKR</span>
                     </div>
                   </div>
 
                   {/* Customer details */}
-                  <div className="space-y-2 border-l border-white/5 pl-0 md:pl-6 text-xs leading-relaxed text-slate-300">
-                    <h4 className="font-semibold text-xs text-slate-400 uppercase tracking-wider">Customer Metadata</h4>
+                  <div className="space-y-2 border-l border-white/5 light:border-slate-200 pl-0 md:pl-6 text-xs leading-relaxed text-slate-300 light:text-slate-600">
+                    <h4 className="font-semibold text-xs text-slate-400 light:text-slate-500 uppercase tracking-wider">Customer Metadata</h4>
                     <div className="space-y-1">
-                      <div>Name: <span className="font-bold text-slate-200">{o.customerName}</span></div>
-                      <div>Phone: <span className="font-bold text-slate-200 flex items-center gap-1">
+                      <div>Name: <span className="font-bold text-slate-200 light:text-slate-800">{o.customerName}</span></div>
+                      <div>Phone: <span className="font-bold text-slate-200 light:text-slate-800 flex items-center gap-1">
                         {o.customerPhone}
                         <a href={`https://wa.me/${o.customerPhone.replace(/[\s+]+/g, '')}`} target="_blank" rel="noreferrer" className="text-brand-400 hover:underline">
                           <ExternalLink className="h-3 w-3 inline" />
                         </a>
                       </span></div>
-                      <div>Delivery Address: <span className="font-bold text-slate-200">{o.customerAddress}</span></div>
+                      <div>Delivery Address: <span className="font-bold text-slate-200 light:text-slate-800">{o.customerAddress}</span></div>
                     </div>
                   </div>
                 </div>
@@ -670,34 +680,34 @@ export default function AdminDashboard() {
             </div>
           )}
         </div>
-      ) : (
+      ) : activeTab === 'analytics' ? (
         /* Tab 3: Dashboard Analytics stats cards */
         <div className="space-y-8">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="glass-card p-6 border border-white/5 space-y-2 flex flex-col justify-between h-36">
-              <div className="flex items-center justify-between text-slate-400">
+            <div className="glass-card p-6 border border-white/5 light:border-slate-200 space-y-2 flex flex-col justify-between h-36">
+              <div className="flex items-center justify-between text-slate-400 light:text-slate-500">
                 <span className="text-xs font-semibold uppercase tracking-wider">Total Sales Invoiced</span>
                 <BarChart3 className="h-5 w-5 text-emerald-400" />
               </div>
-              <div className="text-3xl font-bold font-display text-slate-100">{statsSalesTotal.toLocaleString()} LKR</div>
+              <div className="text-3xl font-bold font-display text-slate-100 light:text-slate-800">{statsSalesTotal.toLocaleString()} LKR</div>
               <div className="text-[10px] text-slate-500">Calculated from completed WhatsApp logs</div>
             </div>
 
-            <div className="glass-card p-6 border border-white/5 space-y-2 flex flex-col justify-between h-36">
-              <div className="flex items-center justify-between text-slate-400">
+            <div className="glass-card p-6 border border-white/5 light:border-slate-200 space-y-2 flex flex-col justify-between h-36">
+              <div className="flex items-center justify-between text-slate-400 light:text-slate-500">
                 <span className="text-xs font-semibold uppercase tracking-wider">Catalog Inventory</span>
                 <Package className="h-5 w-5 text-brand-400" />
               </div>
-              <div className="text-3xl font-bold font-display text-slate-100">{statsBooksCount} Books</div>
+              <div className="text-3xl font-bold font-display text-slate-100 light:text-slate-800">{statsBooksCount} Books</div>
               <div className="text-[10px] text-slate-500">Total books registered in catalog DB</div>
             </div>
 
-            <div className="glass-card p-6 border border-white/5 space-y-2 flex flex-col justify-between h-36">
-              <div className="flex items-center justify-between text-slate-400">
+            <div className="glass-card p-6 border border-white/5 light:border-slate-200 space-y-2 flex flex-col justify-between h-36">
+              <div className="flex items-center justify-between text-slate-400 light:text-slate-500">
                 <span className="text-xs font-semibold uppercase tracking-wider">Pending Shipping Logs</span>
                 <Users className="h-5 w-5 text-amber-400" />
               </div>
-              <div className="text-3xl font-bold font-display text-slate-100">{statsOrdersPending} Orders</div>
+              <div className="text-3xl font-bold font-display text-slate-100 light:text-slate-800">{statsOrdersPending} Orders</div>
               <div className="text-[10px] text-slate-500">Awaiting WhatsApp verification checkmarks</div>
             </div>
           </div>
@@ -705,6 +715,79 @@ export default function AdminDashboard() {
           <div className="glass-card p-6 border border-white/5 text-center py-12">
             <p className="text-sm text-slate-400">Sales Analytics charts and graphic reports will appear once additional checkout transactions populate the database logs.</p>
           </div>
+        </div>
+      ) : (
+        /* Tab 4: Store Settings (Hero Banner configuration) */
+        <div className="glass-card border border-white/5 light:border-slate-200 p-6 space-y-6">
+          <div>
+            <h3 className="text-lg font-bold font-display text-slate-200 light:text-slate-800">Landing Page Hero Banner Configuration</h3>
+            <p className="text-xs text-slate-400 light:text-slate-500 mt-1">Update or replace the main promotional landing page banner dynamically.</p>
+          </div>
+
+          <form onSubmit={handleBannerSave} className="space-y-6 text-sm">
+            <div className="space-y-2">
+              <label className="text-slate-400 light:text-slate-650 text-xs font-semibold flex items-center gap-1.5">
+                <Image className="h-4 w-4" />
+                <span>Banner Image (URL or Local File Upload)</span>
+              </label>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="text"
+                  value={bannerUrl}
+                  onChange={e => setBannerUrl(e.target.value)}
+                  placeholder="Enter banner image URL..."
+                  className="flex-grow px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 light:bg-white light:border-slate-300 light:text-slate-900"
+                />
+                
+                <div className="relative shrink-0">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleBannerUpload}
+                    className="hidden"
+                    id="banner-image-upload"
+                  />
+                  <label
+                    htmlFor="banner-image-upload"
+                    className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs cursor-pointer shadow-md hover:shadow-brand-600/10 active:scale-95 transition-all w-full sm:w-auto whitespace-nowrap"
+                  >
+                    📁 Upload Custom Banner
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Banner Preview */}
+            <div className="space-y-2">
+              <h4 className="text-slate-400 light:text-slate-655 text-xs font-semibold">Active Banner Preview</h4>
+              <div className="relative w-full aspect-[3/1] rounded-2xl overflow-hidden border border-white/10 light:border-slate-200 bg-slate-900 flex items-center justify-center">
+                {bannerUrl ? (
+                  <img src={bannerUrl} alt="Active Banner Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-slate-500">No Banner Loaded</span>
+                )}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-wrap gap-3 border-t border-white/5 pt-6">
+              <button
+                type="button"
+                onClick={handleBannerReset}
+                className="px-5 py-3 rounded-xl border border-white/10 text-slate-300 font-bold hover:bg-white/5 light:border-slate-300 light:text-slate-600 light:hover:bg-slate-200"
+              >
+                Reset to Default
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold flex items-center gap-1.5 shadow-md hover:shadow-brand-600/10 active:scale-95"
+              >
+                <Save className="h-4.5 w-4.5" />
+                <span>Save Configuration</span>
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>

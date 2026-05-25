@@ -5,12 +5,19 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    overflow-x: hidden;
+    scrollbar-gutter: stable;
+  }
+
   body {
     @apply font-sans bg-slate-950 text-slate-100 transition-colors duration-300;
+    overflow-x: hidden;
+    width: 100%;
   }
 
   body.light {
-    @apply bg-slate-50 text-slate-900;
+    @apply bg-white text-slate-900;
   }
 }
 
@@ -21,15 +28,15 @@
   }
   
   .light .glass-card {
-    @apply bg-slate-900/5 backdrop-blur-xl border border-slate-900/10;
+    @apply bg-slate-100 border border-slate-200 shadow-md shadow-slate-200/30;
   }
 
   .glass-panel {
-    @apply bg-slate-950/40 backdrop-blur-md border-b border-white/5;
+    @apply bg-[#002d40] border-b border-white/5;
   }
 
   .light .glass-panel {
-    @apply bg-white/40 backdrop-blur-md border-b border-slate-900/5;
+    @apply bg-[#002d40] border-b border-white/10;
   }
 
   /* 3D Button glow */

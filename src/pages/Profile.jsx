@@ -179,7 +179,7 @@ Please update the order status.`;
                   type="text"
                   value={user.phoneNumber}
                   disabled
-                  className="w-full px-4 py-3 rounded-xl bg-slate-900/50 border border-white/5 text-slate-500 cursor-not-allowed text-sm"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-900/50 border border-white/5 text-slate-500 cursor-not-allowed text-sm light:bg-slate-200/60 light:border-slate-300 light:text-slate-500"
                 />
               </div>
 
@@ -197,7 +197,7 @@ Please update the order status.`;
                   className={`w-full px-4 py-3 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-500/50 ${
                     isEditing 
                       ? 'bg-white/5 border border-brand-500/30 text-slate-100 light:bg-white light:border-slate-300 light:text-slate-900' 
-                      : 'bg-slate-900/20 border border-white/5 text-slate-400 cursor-not-allowed light:bg-slate-100'
+                      : 'bg-slate-900/20 border border-white/5 text-slate-400 cursor-not-allowed light:bg-slate-100 light:text-slate-600'
                   }`}
                 />
               </div>
@@ -216,7 +216,7 @@ Please update the order status.`;
                   className={`w-full px-4 py-3 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-500/50 ${
                     isEditing 
                       ? 'bg-white/5 border border-brand-500/30 text-slate-100 light:bg-white light:border-slate-300 light:text-slate-900' 
-                      : 'bg-slate-900/20 border border-white/5 text-slate-400 cursor-not-allowed light:bg-slate-100'
+                      : 'bg-slate-900/20 border border-white/5 text-slate-400 cursor-not-allowed light:bg-slate-100 light:text-slate-600'
                   }`}
                 />
               </div>
@@ -299,15 +299,15 @@ Please update the order status.`;
             ) : orders.length > 0 ? (
               <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1 no-scrollbar">
                 {orders.map((order) => (
-                  <div key={order._id} className="p-4 rounded-xl border border-white/5 bg-slate-900/40 space-y-3">
+                  <div key={order._id} className="p-4 rounded-xl border border-white/5 bg-slate-900/40 light:bg-white light:border-slate-200/80 shadow-sm light:shadow-slate-200/20 space-y-3">
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-slate-500">ID: {order._id.slice(-6).toUpperCase()}</span>
                       <span className={`px-2 py-0.5 rounded font-bold uppercase text-[9px] ${
                         order.status === 'completed'
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 light:bg-emerald-50 light:text-emerald-700 light:border-emerald-200'
                           : order.status === 'cancelled'
-                          ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                          : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                          ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20 light:bg-rose-50 light:text-rose-700 light:border-rose-200'
+                          : 'bg-amber-500/10 text-amber-400 border border-amber-500/20 light:bg-amber-50 light:text-amber-700 light:border-amber-200'
                       }`}>
                         {order.status}
                       </span>
@@ -317,14 +317,14 @@ Please update the order status.`;
                       {order.items.map((item, idx) => (
                         <div key={idx} className="text-sm font-medium flex justify-between">
                           <span className="text-slate-300 light:text-slate-700 truncate max-w-xs">{item.title}</span>
-                          <span className="text-slate-400">x {item.quantity}</span>
+                          <span className="text-slate-400 light:text-slate-500">x {item.quantity}</span>
                         </div>
                       ))}
                     </div>
 
-                    <div className="flex justify-between items-end border-t border-white/5 pt-2 text-xs">
-                      <span className="text-slate-400">{new Date(order.createdAt).toLocaleDateString()}</span>
-                      <span className="font-bold text-slate-100 font-display text-sm">
+                    <div className="flex justify-between items-end border-t border-white/5 light:border-slate-100 pt-2 text-xs">
+                      <span className="text-slate-400 light:text-slate-500">{new Date(order.createdAt).toLocaleDateString()}</span>
+                      <span className="font-bold text-slate-100 light:text-slate-900 font-display text-sm">
                         {order.totalPrice.toLocaleString()} LKR
                       </span>
                     </div>
@@ -354,7 +354,7 @@ Please update the order status.`;
                 <Package className="h-12 w-12 text-slate-600 mx-auto mb-3" />
                 <h4 className="font-bold text-slate-400">No tracked orders</h4>
                 <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
-                  Orders submitted through the cart redirecting to WhatsApp will appear here for status tracking.
+                  Orders submitted through the bag redirecting to WhatsApp will appear here for status tracking.
                 </p>
               </div>
             )}

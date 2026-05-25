@@ -155,7 +155,7 @@ Please confirm my order.`;
         <ShoppingBag className="h-16 w-16 text-slate-500 mb-6 animate-pulse" />
         <h2 className="text-2xl font-bold font-display text-slate-300 light:text-slate-800">Your bag is empty</h2>
         <p className="text-sm text-slate-400 light:text-slate-500 mt-2 max-w-sm">
-          Explore our collections and add products to your cart to checkout here.
+          Explore our collections and add products to your bag to checkout here.
         </p>
         <Link 
           to="/books" 
@@ -304,9 +304,9 @@ Please confirm my order.`;
                   <span>Subtotal</span>
                   <span>{cartTotal.toLocaleString()} LKR</span>
                 </div>
-                <div className="flex justify-between text-slate-400 light:text-slate-600">
+                <div className="flex justify-between items-center text-slate-400 light:text-slate-600">
                   <span>Delivery Charge</span>
-                  <span className="text-emerald-400 font-semibold">FREE</span>
+                  <span className="text-amber-400 font-semibold text-xs light:text-amber-600">Calculated on confirmation</span>
                 </div>
                 <div className="flex justify-between text-base font-bold text-slate-100 light:text-slate-900 border-t border-white/5 pt-3">
                   <span>Total Amount</span>

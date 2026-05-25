@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import FloatingMusicPlayer from './components/FloatingMusicPlayer';
+import FloatingWhatsAppWidget from './components/FloatingWhatsAppWidget';
 import Home from './pages/Home';
 import Books from './pages/Books';
 import BookDetails from './pages/BookDetails';
@@ -13,6 +13,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import About from './pages/About';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { WishlistProvider } from './context/WishlistContext';
 
 function AppContent() {
   return (
@@ -34,8 +35,8 @@ function AppContent() {
         </Routes>
       </main>
 
-      {/* Floating Music Widget */}
-      <FloatingMusicPlayer />
+      {/* Floating WhatsApp Chat Widget */}
+      <FloatingWhatsAppWidget />
 
       {/* Footer Details */}
       <Footer />
@@ -48,7 +49,9 @@ export default function App() {
     <Router>
       <AuthProvider>
         <CartProvider>
-          <AppContent />
+          <WishlistProvider>
+            <AppContent />
+          </WishlistProvider>
         </CartProvider>
       </AuthProvider>
     </Router>
