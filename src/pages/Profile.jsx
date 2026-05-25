@@ -114,7 +114,13 @@ Customer Details:
 
 Please update the order status.`;
 
-        window.open(`https://wa.me/${adminPhoneNumber}?text=${encodeURIComponent(cancelMessage)}`, '_blank');
+        const cancelUrl = `https://wa.me/${adminPhoneNumber}?text=${encodeURIComponent(cancelMessage)}`;
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (isMobile) {
+          window.location.href = cancelUrl;
+        } else {
+          window.open(cancelUrl, '_blank');
+        }
       } else {
         showToast('Failed to cancel order.', 'error');
       }

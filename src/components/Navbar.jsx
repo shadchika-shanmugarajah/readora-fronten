@@ -68,12 +68,12 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-40 w-full glass-panel transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-24 gap-4">
+        <div className="flex items-center justify-between h-24 gap-2 lg:gap-4">
           {/* Logo */}
           <div className="flex items-center shrink-0">
             <Link to="/" className="flex items-center gap-2">
               {/* Emblem Logo */}
-              <div className="h-16 w-20 overflow-hidden flex items-center justify-center shrink-0">
+              <div className="h-12 w-14 sm:h-14 sm:w-16 lg:h-16 lg:w-20 overflow-hidden flex items-center justify-center shrink-0">
                 <img 
                   src="/readaura_emblem.png" 
                   alt="ReadAura Emblem" 
@@ -86,7 +86,7 @@ export default function Navbar() {
               </div>
 
               {/* Text Logo */}
-              <div className="h-16 w-48 overflow-hidden flex items-center justify-center shrink-0">
+              <div className="hidden sm:flex sm:h-14 sm:w-42 lg:h-16 lg:w-48 overflow-hidden flex items-center justify-center shrink-0">
                 <img 
                   src="/readaura_text_logo.png" 
                   alt="ReadAura Text" 
@@ -123,7 +123,7 @@ export default function Navbar() {
           </div>
 
           {/* Large Centered Search Bar (Desktop) */}
-          <form onSubmit={handleSearchSubmit} className="hidden md:flex flex-grow max-w-lg mx-6 relative items-center">
+          <form onSubmit={handleSearchSubmit} className="hidden md:flex flex-grow max-w-lg mx-3 lg:mx-6 relative items-center">
             <input
               type="text"
               placeholder="Search Books..."
@@ -137,7 +137,7 @@ export default function Navbar() {
           </form>
 
           {/* Action Buttons (Desktop) */}
-          <div className="hidden md:flex items-center space-x-6 shrink-0">
+          <div className="hidden md:flex items-center space-x-3 lg:space-x-6 shrink-0">
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}

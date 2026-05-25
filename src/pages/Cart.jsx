@@ -134,13 +134,24 @@ Please confirm my order.`;
       const encodedText = encodeURIComponent(whatsappMessage);
       const whatsappUrl = `https://wa.me/${adminPhoneNumber}?text=${encodedText}`;
 
-      // Open whatsapp
-      window.open(whatsappUrl, '_blank');
-
-      // Clear local shopping bag
-      clearCart();
-      showToast('Redirected to WhatsApp! Order placed successfully.');
-      navigate('/profile');
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        // Clear local shopping bag and navigate to profile first
+        clearCart();
+        showToast('Redirected to WhatsApp! Order placed successfully.');
+        navigate('/profile');
+        
+        // Redirect the current window to WhatsApp (immune to popup blockers)
+        setTimeout(() => {
+          window.location.href = whatsappUrl;
+        }, 150);
+      } else {
+        // Open whatsapp in a new tab on desktop
+        window.open(whatsappUrl, '_blank');
+        clearCart();
+        showToast('Redirected to WhatsApp! Order placed successfully.');
+        navigate('/profile');
+      }
 
     } catch (error) {
       showToast('Something went wrong. Please try again.', 'error');
