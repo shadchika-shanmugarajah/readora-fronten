@@ -73,7 +73,7 @@ export default function Navbar() {
           <div className="flex items-center shrink-0">
             <Link to="/" className="flex items-center gap-2">
               {/* Emblem Logo */}
-              <div className="h-12 w-14 sm:h-14 sm:w-16 lg:h-16 lg:w-20 overflow-hidden flex items-center justify-center shrink-0">
+              <div className="h-10 w-12 sm:h-14 sm:w-16 lg:h-16 lg:w-20 overflow-hidden flex items-center justify-center shrink-0">
                 <img 
                   src="/readaura_emblem.png" 
                   alt="ReadAura Emblem" 
@@ -86,7 +86,7 @@ export default function Navbar() {
               </div>
 
               {/* Text Logo */}
-              <div className="hidden sm:flex sm:h-14 sm:w-42 lg:h-16 lg:w-48 overflow-hidden flex items-center justify-center shrink-0">
+              <div className="flex h-10 w-28 sm:h-14 sm:w-42 lg:h-16 lg:w-48 overflow-hidden flex items-center justify-center shrink-0">
                 <img 
                   src="/readaura_text_logo.png" 
                   alt="ReadAura Text" 
