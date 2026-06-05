@@ -13,10 +13,28 @@ export default function Home() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const customBanner = localStorage.getItem('book_store_hero_banner');
-    if (customBanner) {
-      setBannerUrl(customBanner);
-    }
+    const fetchBanner = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/settings/book_store_hero_banner`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.value) {
+            setBannerUrl(data.value);
+            localStorage.setItem('book_store_hero_banner', data.value);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to fetch settings from API, using local storage cache", err);
+      }
+      
+      const customBanner = localStorage.getItem('book_store_hero_banner');
+      if (customBanner) {
+        setBannerUrl(customBanner);
+      }
+    };
+
+    fetchBanner();
   }, []);
 
   useEffect(() => {

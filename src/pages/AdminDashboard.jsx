@@ -52,6 +52,20 @@ export default function AdminDashboard() {
         const ordersData = await ordersRes.json();
         setOrders(ordersData);
 
+        // Fetch Settings (Hero Banner)
+        try {
+          const settingsRes = await fetch(`${API_BASE_URL}/settings/book_store_hero_banner`);
+          if (settingsRes.ok) {
+            const settingsData = await settingsRes.json();
+            if (settingsData && settingsData.value) {
+              setBannerUrl(settingsData.value);
+              localStorage.setItem('book_store_hero_banner', settingsData.value);
+            }
+          }
+        } catch (e) {
+          console.warn("Failed to fetch settings from API inside AdminDashboard:", e);
+        }
+
       } catch (err) {
         console.error("Error fetching admin data:", err);
         setBooks([]);
@@ -246,16 +260,63 @@ export default function AdminDashboard() {
     });
   };
 
-  const handleBannerSave = (e) => {
+  const handleBannerSave = async (e) => {
     e.preventDefault();
+    
+    // Save to local storage cache immediately for fast local feedback
     localStorage.setItem('book_store_hero_banner', bannerUrl);
-    showToast('Hero banner configuration updated successfully!');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/settings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          key: 'book_store_hero_banner',
+          value: bannerUrl
+        })
+      });
+
+      if (response.ok) {
+        showToast('Hero banner configuration saved to database successfully!');
+      } else {
+        throw new Error();
+      }
+    } catch (err) {
+      console.error("Error saving banner to database:", err);
+      showToast('Saved locally, but failed to sync to database (Check connection).', 'warning');
+    }
   };
 
-  const handleBannerReset = () => {
-    setBannerUrl('/bookstore_hero_banner.png');
-    localStorage.setItem('book_store_hero_banner', '/bookstore_hero_banner.png');
-    showToast('Hero banner reset to original default.');
+  const handleBannerReset = async () => {
+    const defaultBanner = '/bookstore_hero_banner.png';
+    setBannerUrl(defaultBanner);
+    localStorage.setItem('book_store_hero_banner', defaultBanner);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/settings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          key: 'book_store_hero_banner',
+          value: defaultBanner
+        })
+      });
+
+      if (response.ok) {
+        showToast('Hero banner reset in database.');
+      } else {
+        throw new Error();
+      }
+    } catch (err) {
+      console.error("Error resetting banner in database:", err);
+      showToast('Reset locally, but failed to sync to database.', 'warning');
+    }
   };
 
   const handleBannerUpload = (e) => {
