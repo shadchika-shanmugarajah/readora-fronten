@@ -111,7 +111,7 @@ export default function Cart() {
 
       // 2. Formulate the WhatsApp API click-to-chat message
       // Admin phone number configurable. Default standard Sri Lankan number or configurable.
-      const adminPhoneNumber = '94766572148'; // configurable
+      const adminPhoneNumber = '94774454785'; // configurable
 
       const itemsText = cartItems.map(item => 
         `- ${item.title} x ${item.quantity} (${(item.price * item.quantity).toLocaleString()} LKR)`

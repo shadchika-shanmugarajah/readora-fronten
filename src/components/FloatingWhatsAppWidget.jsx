@@ -3,7 +3,7 @@ import { MessageCircle } from 'lucide-react';
 
 export default function FloatingWhatsAppWidget() {
   const [isHovered, setIsHovered] = useState(false);
-  const adminPhoneNumber = '94766572148'; // Sourcing coordinator WhatsApp number
+  const adminPhoneNumber = '94774454785'; // Sourcing coordinator WhatsApp number
   const defaultMessage = 'Hi, I would like to ask about books available at ReadAura!';
 
   const handleClick = () => {

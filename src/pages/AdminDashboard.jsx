@@ -5,12 +5,19 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { API_BASE_URL } from '../config';
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ initialTab = 'books' }) {
   const { user, token } = useAuth();
   const { showToast } = useCart();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState('books'); // books, orders, analytics, settings
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
+
   const [books, setBooks] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +61,12 @@ export default function AdminDashboard() {
 
         // Fetch Settings (Hero Banner)
         try {
-          const settingsRes = await fetch(`${API_BASE_URL}/settings/book_store_hero_banner`);
+          const settingsRes = await fetch(`${API_BASE_URL}/settings/book_store_hero_banner?t=${Date.now()}`, {
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            }
+          });
           if (settingsRes.ok) {
             const settingsData = await settingsRes.json();
             if (settingsData && settingsData.value) {

@@ -120,6 +120,14 @@ export default function Navbar() {
             >
               About Us
             </Link>
+            {user?.role === 'admin' && (
+              <Link 
+                to="/admin" 
+                className={`transition-colors duration-200 ${isActive('/admin') ? 'text-brand-400' : 'text-slate-300 hover:text-white light:text-slate-200 light:hover:text-white'}`}
+              >
+                Admin Portal
+              </Link>
+            )}
           </div>
 
           {/* Large Centered Search Bar (Desktop) */}

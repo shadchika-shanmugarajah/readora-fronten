@@ -35,7 +35,7 @@ export default function About() {
 
   const phoneNumbers = [
     { number: '075 886 0234', clean: '94758860234' },
-    { number: '076 657 2148', clean: '94766572148' }
+    { number: '077 445 4785', clean: '94774454785' }
   ];
 
   return (

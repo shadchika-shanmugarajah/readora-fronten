@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }) => {
         if (username === 'admin' && password === 'admin123') {
           const mockUser = {
             id: 'user_admin_offline',
-            phoneNumber: '0766572148',
+            phoneNumber: '0774454785',
             name: 'Administrator',
             address: 'Head Office',
             role: 'admin'
@@ -102,7 +102,7 @@ export const AuthProvider = ({ children }) => {
         }
       }
 
-      const isPhoneAdmin = phoneNumber === '0771234567' || phoneNumber === '+94771234567' || phoneNumber === '0766572148' || phoneNumber === '+94766572148';
+      const isPhoneAdmin = phoneNumber === '0771234567' || phoneNumber === '+94771234567' || phoneNumber === '0774454785' || phoneNumber === '+94774454785';
       const mockUser = {
         id: 'user_offline_' + Date.now(),
         phoneNumber,

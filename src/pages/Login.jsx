@@ -49,7 +49,7 @@ export default function Login() {
       const phoneRegex = /^(?:\+94|0)?7[0-9]{8}$/;
       const trimmedPhone = phoneNumber.trim().replace(/\s+/g, '');
       if (!phoneRegex.test(trimmedPhone)) {
-        setError('Please enter a valid Sri Lankan phone number (e.g. 0766572148).');
+        setError('Please enter a valid Sri Lankan phone number (e.g. 0774454785).');
         return;
       }
 
@@ -137,7 +137,7 @@ export default function Login() {
                 </label>
                 <input
                   type="tel"
-                  placeholder="e.g. 0766572148"
+                  placeholder="e.g. 0774454785"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   disabled={authLoading || success}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import FloatingWhatsAppWidget from './components/FloatingWhatsAppWidget';
@@ -11,9 +11,27 @@ import Login from './pages/Login';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import About from './pages/About';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
+
+function AdminRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-slate-100 bg-slate-950">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-t-2 border-brand-500 rounded-full animate-spin mx-auto"></div>
+          <p className="text-sm text-slate-400">Verifying session credentials...</p>
+        </div>
+      </div>
+    );
+  }
+  if (!user || user.role !== 'admin') {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
 
 function AppContent() {
   return (
@@ -31,7 +49,13 @@ function AppContent() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+          
+          {/* Admin Protected Routes */}
+          <Route path="/admin" element={<AdminRoute><AdminDashboard initialTab="books" /></AdminRoute>} />
+          <Route path="/inventory" element={<AdminRoute><AdminDashboard initialTab="books" /></AdminRoute>} />
+          <Route path="/dashboard" element={<AdminRoute><AdminDashboard initialTab="books" /></AdminRoute>} />
+          <Route path="/orders/manage" element={<AdminRoute><AdminDashboard initialTab="orders" /></AdminRoute>} />
+          <Route path="/analytics" element={<AdminRoute><AdminDashboard initialTab="analytics" /></AdminRoute>} />
         </Routes>
       </main>
 

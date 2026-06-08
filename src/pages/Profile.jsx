@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Phone, MapPin, LogOut, Package, ArrowRight, Save, Clock, Send } from 'lucide-react';
+import { User, Phone, MapPin, LogOut, Package, ArrowRight, Save, Clock, Send, Heart, Sparkles, BookOpen } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 import { API_BASE_URL } from '../config';
 
 export default function Profile() {
   const { user, token, logout, updateProfile } = useAuth();
   const { showToast } = useCart();
+  const { wishlistItems } = useWishlist();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -56,8 +58,56 @@ export default function Profile() {
     fetchMyOrders();
   }, [user, token, navigate]);
 
+  const [recommendedBooks, setRecommendedBooks] = useState([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(true);
+
+  useEffect(() => {
+    if (!user || user.role === 'admin') return;
+
+    const fetchRecommendations = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/books?featured=true`);
+        if (res.ok) {
+          const data = await res.json();
+          setRecommendedBooks(data.slice(0, 3));
+        } else {
+          throw new Error();
+        }
+      } catch (error) {
+        console.warn("Offline or failed to fetch recommendations. Using static recommendations fallback.");
+        setRecommendedBooks([
+          {
+            _id: 'book_1',
+            title: 'The Alchemist',
+            author: 'Paulo Coelho',
+            price: 1800,
+            coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600'
+          },
+          {
+            _id: 'book_2',
+            title: 'Atomic Habits',
+            author: 'James Clear',
+            price: 2400,
+            coverImage: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=600'
+          },
+          {
+            _id: 'book_4',
+            title: 'Thinking, Fast and Slow',
+            author: 'Daniel Kahneman',
+            price: 2900,
+            coverImage: 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=600'
+          }
+        ]);
+      } finally {
+        setLoadingRecommendations(false);
+      }
+    };
+
+    fetchRecommendations();
+  }, [user]);
+
   const handleRetryWhatsApp = (order) => {
-    const adminPhoneNumber = '94766572148';
+    const adminPhoneNumber = '94774454785';
     const itemsText = order.items.map(item => 
       `- ${item.title} x ${item.quantity} (${(item.price * item.quantity).toLocaleString()} LKR)`
     ).join('\n');
@@ -95,7 +145,7 @@ Please confirm my order.`;
         showToast('Order cancelled successfully.');
 
         // Open WhatsApp cancellation notice to admin
-        const adminPhoneNumber = '94766572148';
+        const adminPhoneNumber = '94774454785';
         const itemsText = order.items.map(item => 
           `- ${item.title} x ${item.quantity}`
         ).join('\n');
@@ -286,6 +336,71 @@ Please update the order status.`;
               </Link>
             </div>
           )}
+
+          {/* Customer Reading History progress */}
+          {user.role !== 'admin' && (
+            <div className="glass-card p-6 border border-white/5 space-y-4 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-200 light:text-slate-800 flex items-center gap-2 uppercase tracking-wide">
+                <BookOpen className="h-4 w-4 text-brand-400" />
+                <span>Reading Progress</span>
+              </h3>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="font-semibold text-slate-300 light:text-slate-700 truncate max-w-[70%]">Atomic Habits</span>
+                    <span className="text-slate-400 shrink-0">45%</span>
+                  </div>
+                  <div className="w-full bg-white/5 light:bg-slate-200 h-2 rounded-full overflow-hidden">
+                    <div className="bg-gradient-to-r from-brand-500 to-purple-600 h-full rounded-full" style={{ width: '45%' }} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="font-semibold text-slate-300 light:text-slate-700 truncate max-w-[70%]">The Psychology of Money</span>
+                    <span className="text-slate-400 shrink-0">70%</span>
+                  </div>
+                  <div className="w-full bg-white/5 light:bg-slate-200 h-2 rounded-full overflow-hidden">
+                    <div className="bg-gradient-to-r from-brand-500 to-purple-600 h-full rounded-full" style={{ width: '70%' }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Customer Wishlist Summary */}
+          {user.role !== 'admin' && (
+            <div className="glass-card p-6 border border-white/5 space-y-4 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-200 light:text-slate-800 flex items-center gap-2 uppercase tracking-wide">
+                <Heart className="h-4 w-4 text-rose-500 fill-rose-500/20" />
+                <span>Wishlist Summary</span>
+              </h3>
+              {wishlistItems && wishlistItems.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    {wishlistItems.slice(0, 3).map((item) => (
+                      <Link to={`/book/${item._id}`} key={item._id} className="group flex flex-col items-center">
+                        <div className="h-20 w-14 bg-slate-800 rounded border border-white/5 overflow-hidden flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                          <img src={item.coverImage} alt={item.title} className="w-full h-full object-cover" />
+                        </div>
+                        <span className="text-[10px] text-slate-400 truncate w-full text-center mt-1.5 group-hover:text-brand-400">{item.title}</span>
+                      </Link>
+                    ))}
+                  </div>
+                  <div className="pt-2 border-t border-white/5 flex justify-end">
+                    <Link to="/books?wishlist=true" className="text-xs font-semibold text-brand-400 hover:text-brand-300 flex items-center gap-1">
+                      <span>View Full Wishlist</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4 space-y-2">
+                  <p className="text-xs text-slate-500">Your wishlist is empty.</p>
+                  <Link to="/books" className="inline-block text-xs font-semibold text-brand-400 hover:underline">Explore Books</Link>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Order History */}
@@ -365,6 +480,39 @@ Please update the order status.`;
               </div>
             )}
           </div>
+
+          {/* Recommended Books */}
+          {user.role !== 'admin' && (
+            <div className="glass-card p-6 border border-white/5 space-y-6">
+              <h2 className="text-xl font-bold font-display text-slate-200 light:text-slate-800 border-b border-white/5 pb-3 flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-amber-400 animate-pulse" />
+                <span>Recommended for You</span>
+              </h2>
+              
+              {loadingRecommendations ? (
+                <div className="grid grid-cols-3 gap-4">
+                  {[1, 2, 3].map((s) => (
+                    <div key={s} className="h-44 bg-white/5 shimmer rounded-xl" />
+                  ))}
+                </div>
+              ) : recommendedBooks.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {recommendedBooks.map((book) => (
+                    <Link to={`/book/${book._id}`} key={book._id} className="p-3 rounded-xl border border-white/5 bg-slate-900/40 hover:border-brand-500/35 transition-all flex flex-col items-center text-center group">
+                      <div className="h-28 w-20 bg-slate-800 rounded border border-white/5 overflow-hidden flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                        <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-200 mt-2 truncate w-full group-hover:text-brand-400">{book.title}</h4>
+                      <p className="text-[10px] text-slate-400 truncate w-full">by {book.author}</p>
+                      <span className="text-xs font-bold text-brand-400 mt-1">{book.price.toLocaleString()} LKR</span>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500 text-center py-4">No recommended books found.</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -15,7 +15,12 @@ export default function Home() {
   useEffect(() => {
     const fetchBanner = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/settings/book_store_hero_banner`);
+        const res = await fetch(`${API_BASE_URL}/settings/book_store_hero_banner?t=${Date.now()}`, {
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
         if (res.ok) {
           const data = await res.json();
           if (data && data.value) {
