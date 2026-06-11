@@ -1,4 +1,4 @@
 const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 export const API_BASE_URL = isLocal 
   ? 'http://localhost:5001/api' 
-  : 'https://readora-backend-1.onrender.com/api';
+  : 'https://readora-backend-2.onrender.com/api';
