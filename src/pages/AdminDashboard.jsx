@@ -23,25 +23,6 @@ export default function AdminDashboard({ initialTab = 'books' }) {
   const [loading, setLoading] = useState(true);
   const [bannerUrl, setBannerUrl] = useState(localStorage.getItem('book_store_hero_banner') || '/bookstore_hero_banner.png');
   const [bannerVersion, setBannerVersion] = useState(localStorage.getItem('book_store_hero_banner_version') || '');
-  
-  // Category states
-  const [categories, setCategories] = useState([
-    { _id: 'cat_1', name: 'Fiction' },
-    { _id: 'cat_2', name: 'Non Fiction' },
-    { _id: 'cat_3', name: 'Kavithai (Poetry)' },
-    { _id: 'cat_4', name: 'Novel' },
-    { _id: 'cat_5', name: 'Short Stories' },
-    { _id: 'cat_6', name: 'History' },
-    { _id: 'cat_7', name: 'Education' },
-    { _id: 'cat_8', name: 'Children\'s Books' },
-    { _id: 'cat_9', name: 'Religion' },
-    { _id: 'cat_10', name: 'Biography' },
-    { _id: 'cat_11', name: 'Science' },
-    { _id: 'cat_12', name: 'Technology' },
-    { _id: 'cat_13', name: 'Business' },
-    { _id: 'cat_14', name: 'Self Development' }
-  ]);
-  const [newCategoryName, setNewCategoryName] = useState('');
 
   // Form states for creating/editing book
   const [editingBookId, setEditingBookId] = useState(null); // null means creating
@@ -55,12 +36,7 @@ export default function AdminDashboard({ initialTab = 'books' }) {
     coverImage: '',
     stock: 10,
     featured: false,
-    language: 'English',
-    publisher: '',
-    pages: '',
-    publishYear: new Date().getFullYear().toString(),
-    isbn: '',
-    availabilityStatus: 'In Stock'
+    language: 'English'
   });
 
   useEffect(() => {
@@ -83,19 +59,6 @@ export default function AdminDashboard({ initialTab = 'books' }) {
         const ordersRes = await fetch(`${API_BASE_URL}/orders`, { headers });
         const ordersData = await ordersRes.json();
         setOrders(ordersData);
-
-        // Fetch Categories
-        try {
-          const catsRes = await fetch(`${API_BASE_URL}/categories`);
-          if (catsRes.ok) {
-            const catsData = await catsRes.json();
-            if (Array.isArray(catsData) && catsData.length > 0) {
-              setCategories(catsData);
-            }
-          }
-        } catch (e) {
-          console.warn("Failed to fetch dynamic categories in AdminDashboard:", e);
-        }
 
         // Fetch Settings (Hero Banner)
         try {
@@ -185,12 +148,7 @@ export default function AdminDashboard({ initialTab = 'books' }) {
       coverImage: book.coverImage || '',
       stock: book.stock,
       featured: book.featured,
-      language: book.language || 'English',
-      publisher: book.publisher || '',
-      pages: book.pages !== undefined ? book.pages.toString() : '',
-      publishYear: book.publishYear !== undefined ? book.publishYear.toString() : new Date().getFullYear().toString(),
-      isbn: book.isbn || '',
-      availabilityStatus: book.availabilityStatus || 'In Stock'
+      language: book.language || 'English'
     });
     setShowBookForm(true);
   };
@@ -319,68 +277,8 @@ export default function AdminDashboard({ initialTab = 'books' }) {
       coverImage: '',
       stock: 10,
       featured: false,
-      language: 'English',
-      publisher: '',
-      pages: '',
-      publishYear: new Date().getFullYear().toString(),
-      isbn: '',
-      availabilityStatus: 'In Stock'
+      language: 'English'
     });
-  };
-
-  const handleAddCategorySubmit = async (e) => {
-    e.preventDefault();
-    if (!newCategoryName.trim()) {
-      showToast('Please enter a category name.', 'error');
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/categories`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ name: newCategoryName.trim() })
-      });
-
-      if (response.ok) {
-        const savedCategory = await response.json();
-        setCategories([...categories, savedCategory]);
-        setNewCategoryName('');
-        showToast('Category added successfully!');
-      } else {
-        const err = await response.json();
-        showToast(err.message || 'Failed to add category.', 'error');
-      }
-    } catch (err) {
-      console.error("Error adding category:", err);
-      showToast('Error adding category.', 'error');
-    }
-  };
-
-  const handleDeleteCategory = async (catId) => {
-    if (!window.confirm('Are you sure you want to delete this category?')) return;
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/categories/${catId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        setCategories(categories.filter(c => c._id !== catId));
-        showToast('Category deleted successfully.');
-      } else {
-        showToast('Failed to delete category.', 'error');
-      }
-    } catch (err) {
-      console.error("Error deleting category:", err);
-      showToast('Failed to delete category.', 'error');
-    }
   };
 
   const handleBannerSave = async (e) => {
@@ -516,7 +414,6 @@ export default function AdminDashboard({ initialTab = 'books' }) {
         {[
           { id: 'books', name: 'Inventory Catalog', icon: <Package className="h-4 w-4" /> },
           { id: 'orders', name: 'WhatsApp Logged Orders', icon: <BookOpen className="h-4 w-4" /> },
-          { id: 'categories', name: 'Manage Categories', icon: <Tag className="h-4 w-4" /> },
           { id: 'analytics', name: 'Analytics Board', icon: <BarChart3 className="h-4 w-4" /> },
           { id: 'settings', name: 'Store Settings', icon: <Settings className="h-4 w-4" /> }
         ].map(t => (
@@ -597,9 +494,14 @@ export default function AdminDashboard({ initialTab = 'books' }) {
                     onChange={e => setBookFormData({ ...bookFormData, category: e.target.value })}
                     className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/50 bg-slate-900 light:bg-white light:border-slate-300 light:text-slate-900"
                   >
-                    {categories.map(cat => (
-                      <option key={cat._id} value={cat.name}>{cat.name}</option>
-                    ))}
+                    <option value="Fiction">Fiction</option>
+                    <option value="Non Fiction">Non Fiction</option>
+                    <option value="Children's Books">Children's Books</option>
+                    <option value="Competitive Exams">Competitive Exams</option>
+                    <option value="School Books">School Books</option>
+                    <option value="Magazines">Magazines</option>
+                    <option value="Gifts">Gifts</option>
+                    <option value="Stationery">Stationery</option>
                   </select>
                 </div>
 
@@ -679,68 +581,6 @@ export default function AdminDashboard({ initialTab = 'books' }) {
                     onChange={e => setBookFormData({ ...bookFormData, stock: Number(e.target.value) })}
                     className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500/50 light:bg-white light:border-slate-300 light:text-slate-900"
                   />
-                </div>
-
-                {/* Publisher */}
-                <div className="space-y-1">
-                  <label className="text-slate-400 light:text-slate-600 text-xs font-semibold">Publisher</label>
-                  <input
-                    type="text"
-                    value={bookFormData.publisher}
-                    onChange={e => setBookFormData({ ...bookFormData, publisher: e.target.value })}
-                    placeholder="e.g. Vikatan Publications"
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500/50 light:bg-white light:border-slate-300 light:text-slate-900"
-                  />
-                </div>
-
-                {/* Number of Pages */}
-                <div className="space-y-1">
-                  <label className="text-slate-400 light:text-slate-600 text-xs font-semibold">Number of Pages</label>
-                  <input
-                    type="number"
-                    value={bookFormData.pages}
-                    onChange={e => setBookFormData({ ...bookFormData, pages: e.target.value })}
-                    placeholder="e.g. 256"
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500/50 light:bg-white light:border-slate-300 light:text-slate-900"
-                  />
-                </div>
-
-                {/* Publication Year */}
-                <div className="space-y-1">
-                  <label className="text-slate-400 light:text-slate-600 text-xs font-semibold">Publication Year</label>
-                  <input
-                    type="number"
-                    value={bookFormData.publishYear}
-                    onChange={e => setBookFormData({ ...bookFormData, publishYear: e.target.value })}
-                    placeholder="e.g. 2024"
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500/50 light:bg-white light:border-slate-300 light:text-slate-900"
-                  />
-                </div>
-
-                {/* ISBN */}
-                <div className="space-y-1">
-                  <label className="text-slate-400 light:text-slate-600 text-xs font-semibold">ISBN</label>
-                  <input
-                    type="text"
-                    value={bookFormData.isbn}
-                    onChange={e => setBookFormData({ ...bookFormData, isbn: e.target.value })}
-                    placeholder="e.g. 978-8184762945"
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500/50 light:bg-white light:border-slate-300 light:text-slate-900"
-                  />
-                </div>
-
-                {/* Availability Status */}
-                <div className="space-y-1">
-                  <label className="text-slate-400 light:text-slate-600 text-xs font-semibold">Availability Status</label>
-                  <select
-                    value={bookFormData.availabilityStatus || 'In Stock'}
-                    onChange={e => setBookFormData({ ...bookFormData, availabilityStatus: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-350 focus:outline-none focus:ring-2 focus:ring-brand-500/50 bg-slate-900 light:bg-white light:border-slate-300 light:text-slate-900"
-                  >
-                    <option value="In Stock">In Stock</option>
-                    <option value="Out of Stock">Out of Stock</option>
-                    <option value="Pre-Order">Pre-Order</option>
-                  </select>
                 </div>
 
                 {/* Featured checkbox */}
@@ -999,63 +839,6 @@ export default function AdminDashboard({ initialTab = 'books' }) {
 
           <div className="glass-card p-6 border border-white/5 text-center py-12">
             <p className="text-sm text-slate-400">Sales Analytics charts and graphic reports will appear once additional checkout transactions populate the database logs.</p>
-          </div>
-        </div>
-      ) : activeTab === 'categories' ? (
-        /* Tab 5: Categories Management */
-        <div className="space-y-6">
-          <div className="glass-card border border-white/5 light:border-slate-200 p-6 space-y-6">
-            <div>
-              <h3 className="text-lg font-bold font-display text-slate-200 light:text-slate-800">Dynamic Category Manager</h3>
-              <p className="text-xs text-slate-400 light:text-slate-500 mt-1">Configure, add, or delete product categorization lists dynamically.</p>
-            </div>
-
-            {/* Category Add Form */}
-            <form onSubmit={handleAddCategorySubmit} className="flex flex-col sm:flex-row gap-3">
-              <input
-                type="text"
-                value={newCategoryName}
-                onChange={e => setNewCategoryName(e.target.value)}
-                placeholder="Enter new category name (e.g. History)..."
-                className="flex-grow px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 light:bg-white light:border-slate-300 light:text-slate-900 text-sm"
-              />
-              <button
-                type="submit"
-                className="px-5 py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Add Category</span>
-              </button>
-            </form>
-
-            {/* Categories List */}
-            <div className="border border-white/5 light:border-slate-200 rounded-xl overflow-hidden">
-              <table className="w-full text-left border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-white/5 light:border-slate-200 text-slate-400 light:text-slate-500 text-xs uppercase font-semibold bg-white/5">
-                    <th className="p-4">Category Name</th>
-                    <th className="p-4 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5 light:divide-slate-200">
-                  {categories.map(cat => (
-                    <tr key={cat._id} className="hover:bg-white/5 light:hover:bg-slate-100/50 transition-colors">
-                      <td className="p-4 font-bold text-slate-200 light:text-slate-800">{cat.name}</td>
-                      <td className="p-4 text-right">
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteCategory(cat._id)}
-                          className="p-2 rounded bg-white/5 border border-white/10 hover:bg-rose-500/10 hover:border-rose-500/30 hover:text-rose-400 transition-colors"
-                          title="Delete Category"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
           </div>
         </div>
       ) : (
