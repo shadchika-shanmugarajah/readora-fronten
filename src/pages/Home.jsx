@@ -10,7 +10,16 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [bannerUrl, setBannerUrl] = useState('/bookstore_hero_banner.png');
+  const [bannerVersion, setBannerVersion] = useState('');
   const navigate = useNavigate();
+
+  const getBustedUrl = (url, version) => {
+    if (!url) return '';
+    if (url.startsWith('data:')) return url;
+    if (!version) return url;
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}v=${version}`;
+  };
 
   useEffect(() => {
     const fetchBanner = async () => {
@@ -25,7 +34,10 @@ export default function Home() {
           const data = await res.json();
           if (data && data.value) {
             setBannerUrl(data.value);
+            const version = data.updatedAt ? new Date(data.updatedAt).getTime() : '';
+            setBannerVersion(version);
             localStorage.setItem('book_store_hero_banner', data.value);
+            localStorage.setItem('book_store_hero_banner_version', version);
             return;
           }
         }
@@ -34,8 +46,10 @@ export default function Home() {
       }
       
       const customBanner = localStorage.getItem('book_store_hero_banner');
+      const customVersion = localStorage.getItem('book_store_hero_banner_version');
       if (customBanner) {
         setBannerUrl(customBanner);
+        if (customVersion) setBannerVersion(customVersion);
       }
     };
 
@@ -75,7 +89,7 @@ export default function Home() {
           onClick={() => navigate('/books')}
         >
           <img 
-            src={bannerUrl} 
+            src={getBustedUrl(bannerUrl, bannerVersion)} 
             alt="ReadAura Bookstore Campaign Banner - 15% OFF ALL ORDERS" 
             className="w-full h-full object-cover transform hover:scale-[1.02] transition-transform duration-700 ease-out"
           />

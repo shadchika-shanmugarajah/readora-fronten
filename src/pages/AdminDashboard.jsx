@@ -22,6 +22,7 @@ export default function AdminDashboard({ initialTab = 'books' }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [bannerUrl, setBannerUrl] = useState(localStorage.getItem('book_store_hero_banner') || '/bookstore_hero_banner.png');
+  const [bannerVersion, setBannerVersion] = useState(localStorage.getItem('book_store_hero_banner_version') || '');
 
   // Form states for creating/editing book
   const [editingBookId, setEditingBookId] = useState(null); // null means creating
@@ -71,7 +72,10 @@ export default function AdminDashboard({ initialTab = 'books' }) {
             const settingsData = await settingsRes.json();
             if (settingsData && settingsData.value) {
               setBannerUrl(settingsData.value);
+              const version = settingsData.updatedAt ? new Date(settingsData.updatedAt).getTime() : '';
+              setBannerVersion(version);
               localStorage.setItem('book_store_hero_banner', settingsData.value);
+              localStorage.setItem('book_store_hero_banner_version', version);
             }
           }
         } catch (e) {
@@ -200,6 +204,16 @@ export default function AdminDashboard({ initialTab = 'books' }) {
     }
   };
 
+
+  const getBustedUrl = (url, version) => {
+    if (!url) return '';
+    if (url.startsWith('data:')) return url;
+    if (!version) return url;
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}v=${version}`;
+  };
+
+
   const compressImage = (base64Str, maxWidth = 800, maxHeight = 800, quality = 0.7) => {
     return new Promise((resolve, reject) => {
       const img = new window.Image();
@@ -292,6 +306,10 @@ export default function AdminDashboard({ initialTab = 'books' }) {
       });
 
       if (response.ok) {
+        const savedSetting = await response.json();
+        const version = savedSetting.updatedAt ? new Date(savedSetting.updatedAt).getTime() : Date.now();
+        setBannerVersion(version);
+        localStorage.setItem('book_store_hero_banner_version', version);
         showToast('Hero banner configuration saved to database successfully!');
       } else {
         throw new Error();
@@ -321,6 +339,10 @@ export default function AdminDashboard({ initialTab = 'books' }) {
       });
 
       if (response.ok) {
+        const savedSetting = await response.json();
+        const version = savedSetting.updatedAt ? new Date(savedSetting.updatedAt).getTime() : Date.now();
+        setBannerVersion(version);
+        localStorage.setItem('book_store_hero_banner_version', version);
         showToast('Hero banner reset in database.');
       } else {
         throw new Error();
@@ -871,7 +893,7 @@ export default function AdminDashboard({ initialTab = 'books' }) {
               <h4 className="text-slate-400 light:text-slate-655 text-xs font-semibold">Active Banner Preview</h4>
               <div className="relative w-full aspect-[3/1] rounded-2xl overflow-hidden border border-white/10 light:border-slate-200 bg-slate-900 flex items-center justify-center">
                 {bannerUrl ? (
-                  <img src={bannerUrl} alt="Active Banner Preview" className="w-full h-full object-cover" />
+                  <img src={getBustedUrl(bannerUrl, bannerVersion)} alt="Active Banner Preview" className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-slate-500">No Banner Loaded</span>
                 )}
