@@ -19,13 +19,13 @@ export default function Navbar() {
   const [categories, setCategories] = useState([
     { name: 'Fiction' },
     { name: 'Non Fiction' },
+    { name: 'Kavi (Poem)' },
     { name: 'Children\'s Books' },
     { name: 'Competitive Exams' },
     { name: 'School Books' },
     { name: 'Magazines' },
     { name: 'Gifts' },
-    { name: 'Stationery' },
-    { name: 'Kavi (Poem)' }
+    { name: 'Stationery' }
   ]);
   const [suggestions, setSuggestions] = useState({ books: [], authors: [], publishers: [] });
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -40,7 +40,25 @@ export default function Navbar() {
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data) && data.length > 0) {
-            setCategories(data);
+            const desiredOrder = [
+              'Fiction',
+              'Non Fiction',
+              'Kavi (Poem)',
+              'Children\'s Books',
+              'Competitive Exams',
+              'School Books',
+              'Magazines',
+              'Gifts',
+              'Stationery'
+            ];
+            const sorted = data.sort((a, b) => {
+              let idxA = desiredOrder.indexOf(a.name);
+              let idxB = desiredOrder.indexOf(b.name);
+              if (idxA === -1) idxA = 999;
+              if (idxB === -1) idxB = 999;
+              return idxA - idxB;
+            });
+            setCategories(sorted);
           }
         }
       } catch (err) {

@@ -85,7 +85,25 @@ export default function AdminDashboard({ initialTab = 'books' }) {
           if (catsRes.ok) {
             const catsData = await catsRes.json();
             if (Array.isArray(catsData) && catsData.length > 0) {
-              setCategories(catsData);
+              const desiredOrder = [
+                'Fiction',
+                'Non Fiction',
+                'Kavi (Poem)',
+                'Children\'s Books',
+                'Competitive Exams',
+                'School Books',
+                'Magazines',
+                'Gifts',
+                'Stationery'
+              ];
+              const sorted = catsData.sort((a, b) => {
+                let idxA = desiredOrder.indexOf(a.name);
+                let idxB = desiredOrder.indexOf(b.name);
+                if (idxA === -1) idxA = 999;
+                if (idxB === -1) idxB = 999;
+                return idxA - idxB;
+              });
+              setCategories(sorted);
             }
           }
         } catch (e) {

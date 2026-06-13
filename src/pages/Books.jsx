@@ -28,7 +28,27 @@ export default function Books() {
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data) && data.length > 0) {
-            setCategories(['All', ...data.map(c => c.name)]);
+            const desiredOrder = [
+              'Fiction',
+              'Non Fiction',
+              'Kavi (Poem)',
+              'Children\'s Books',
+              'Competitive Exams',
+              'School Books',
+              'Magazines',
+              'Gifts',
+              'Stationery'
+            ];
+            const sortedNames = data
+              .map(c => c.name)
+              .sort((a, b) => {
+                let idxA = desiredOrder.indexOf(a);
+                let idxB = desiredOrder.indexOf(b);
+                if (idxA === -1) idxA = 999;
+                if (idxB === -1) idxB = 999;
+                return idxA - idxB;
+              });
+            setCategories(['All', ...sortedNames]);
           }
         }
       } catch (err) {
