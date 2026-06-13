@@ -62,12 +62,7 @@ export default function AdminDashboard({ initialTab = 'books' }) {
 
         // Fetch Settings (Hero Banner)
         try {
-          const settingsRes = await fetch(`${API_BASE_URL}/settings/book_store_hero_banner?t=${Date.now()}`, {
-            headers: {
-              'Cache-Control': 'no-cache',
-              'Pragma': 'no-cache'
-            }
-          });
+          const settingsRes = await fetch(`${API_BASE_URL}/settings/book_store_hero_banner?t=${Date.now()}`);
           if (settingsRes.ok) {
             const settingsData = await settingsRes.json();
             if (settingsData && settingsData.value) {
