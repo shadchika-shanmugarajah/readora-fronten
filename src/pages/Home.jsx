@@ -57,7 +57,7 @@ export default function Home() {
         const res = await fetch(`${API_BASE_URL}/books?featured=true`);
         if (res.ok) {
           const data = await res.json();
-          setFeaturedBooks(data.slice(0, 4));
+          setFeaturedBooks(data);
         } else {
           throw new Error();
         }
