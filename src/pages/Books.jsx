@@ -19,17 +19,24 @@ export default function Books() {
   const selectedLanguage = searchParams.get('language') || 'All';
   const [localSearch, setLocalSearch] = useState(searchQuery);
 
-  const categories = [
-    'All',
-    'Fiction',
-    'Non Fiction',
-    'Children\'s Books',
-    'Competitive Exams',
-    'School Books',
-    'Magazines',
-    'Gifts',
-    'Stationery'
-  ];
+  const [categories, setCategories] = useState(['All']);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/categories`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setCategories(['All', ...data.map(c => c.name)]);
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to fetch dynamic categories in Books page:", err);
+      }
+    };
+    fetchCategories();
+  }, []);
   const languages = [
     { code: 'All', label: 'Shop All' },
     { code: 'Tamil', label: 'Tamil' },

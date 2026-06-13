@@ -4,6 +4,7 @@ import { ShoppingBag, User, Sun, Moon, BookOpen, Menu, X, Search, Heart } from '
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { API_BASE_URL } from '../config';
 
 export default function Navbar() {
   const { user } = useAuth();
@@ -15,6 +16,44 @@ export default function Navbar() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [categories, setCategories] = useState([
+    { name: 'Fiction' },
+    { name: 'Non Fiction' },
+    { name: 'Kavithai (Poetry)' },
+    { name: 'Novel' },
+    { name: 'Short Stories' },
+    { name: 'History' },
+    { name: 'Education' },
+    { name: 'Children\'s Books' },
+    { name: 'Religion' },
+    { name: 'Biography' },
+    { name: 'Science' },
+    { name: 'Technology' },
+    { name: 'Business' },
+    { name: 'Self Development' }
+  ]);
+  const [suggestions, setSuggestions] = useState({ books: [], authors: [], publishers: [] });
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const navbarSearchRef = React.useRef(null);
+  const mobileSearchRef = React.useRef(null);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/categories`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setCategories(data);
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to fetch dynamic categories:", err);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const bodyClass = document.body.classList;
@@ -31,12 +70,55 @@ export default function Navbar() {
     setSearchQuery(searchParams.get('search') || '');
   }, [searchParams]);
 
+  // Fetch live autocomplete suggestions
+  useEffect(() => {
+    if (!searchQuery.trim() || searchQuery.length < 2) {
+      setSuggestions({ books: [], authors: [], publishers: [] });
+      setShowSuggestions(false);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/books/suggestions?q=${encodeURIComponent(searchQuery)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSuggestions(data);
+          setShowSuggestions(
+            (data.books && data.books.length > 0) ||
+            (data.authors && data.authors.length > 0) ||
+            (data.publishers && data.publishers.length > 0)
+          );
+        }
+      } catch (err) {
+        console.warn("Failed to fetch suggestions:", err);
+      }
+    }, 250);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  // Click outside to close suggestions
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (
+        (!navbarSearchRef.current || !navbarSearchRef.current.contains(e.target)) &&
+        (!mobileSearchRef.current || !mobileSearchRef.current.contains(e.target))
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
+    setShowSuggestions(false);
     if (searchQuery.trim()) {
       navigate(`/books?search=${encodeURIComponent(searchQuery.trim())}`);
     } else {
@@ -54,16 +136,92 @@ export default function Navbar() {
     ...(user?.role === 'admin' ? [{ name: 'Admin Portal', path: '/admin' }] : []),
   ];
 
-  const categories = [
-    { name: 'Fiction', path: '/books?category=Fiction' },
-    { name: 'Non Fiction', path: '/books?category=Non%20Fiction' },
-    { name: 'Children\'s Books', path: '/books?category=Children\'s%20Books' },
-    { name: 'Competitive Exams', path: '/books?category=Competitive%20Exams' },
-    { name: 'School Books', path: '/books?category=School%20Books' },
-    { name: 'Magazines', path: '/books?category=Magazines' },
-    { name: 'Gifts', path: '/books?category=Gifts' },
-    { name: 'Stationery', path: '/books?category=Stationery' }
-  ];
+  const renderSuggestions = () => {
+    if (!showSuggestions) return null;
+    const hasBooks = suggestions.books && suggestions.books.length > 0;
+    const hasAuthors = suggestions.authors && suggestions.authors.length > 0;
+    const hasPublishers = suggestions.publishers && suggestions.publishers.length > 0;
+    
+    if (!hasBooks && !hasAuthors && !hasPublishers) return null;
+
+    return (
+      <div className="absolute top-full left-0 right-0 mt-2 z-50 glass-card bg-slate-900/95 light:bg-white/95 border border-white/10 light:border-slate-300 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-md max-h-96 overflow-y-auto">
+        <div className="p-3 divide-y divide-white/5 light:divide-slate-200 text-sm">
+          {/* Books Section */}
+          {hasBooks && (
+            <div className="pb-3">
+              <div className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-brand-400">Books</div>
+              <div className="space-y-1">
+                {suggestions.books.map(b => (
+                  <button
+                    key={b._id}
+                    type="button"
+                    onClick={() => {
+                      navigate(`/book/${b._id}`);
+                      setShowSuggestions(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 light:hover:bg-slate-100 transition-all text-left"
+                  >
+                    <div className="h-10 w-8 bg-slate-800 rounded overflow-hidden shrink-0 border border-white/5 flex items-center justify-center">
+                      <img src={b.coverImage} alt={b.title} className="w-full h-full object-contain" />
+                    </div>
+                    <div className="truncate flex-grow">
+                      <div className="font-semibold text-slate-100 light:text-slate-850 truncate">{b.title}</div>
+                      <div className="text-[11px] text-slate-400 light:text-slate-500">by {b.author}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Authors Section */}
+          {hasAuthors && (
+            <div className="py-3">
+              <div className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-purple-400">Authors</div>
+              <div className="space-y-1">
+                {suggestions.authors.map(author => (
+                  <button
+                    key={author}
+                    type="button"
+                    onClick={() => {
+                      navigate(`/books?search=${encodeURIComponent(author)}`);
+                      setShowSuggestions(false);
+                    }}
+                    className="w-full px-3 py-2 rounded-xl hover:bg-white/5 light:hover:bg-slate-100 transition-all text-left font-semibold text-slate-250 light:text-slate-700"
+                  >
+                    👤 {author}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Publishers Section */}
+          {hasPublishers && (
+            <div className="pt-3">
+              <div className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-amber-400">Publishers</div>
+              <div className="space-y-1">
+                {suggestions.publishers.map(pub => (
+                  <button
+                    key={pub}
+                    type="button"
+                    onClick={() => {
+                      navigate(`/books?search=${encodeURIComponent(pub)}`);
+                      setShowSuggestions(false);
+                    }}
+                    className="w-full px-3 py-2 rounded-xl hover:bg-white/5 light:hover:bg-slate-100 transition-all text-left font-semibold text-slate-250 light:text-slate-700"
+                  >
+                    🏢 {pub}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <nav className="sticky top-0 z-40 w-full glass-panel transition-colors duration-300">
@@ -131,7 +289,7 @@ export default function Navbar() {
           </div>
 
           {/* Large Centered Search Bar (Desktop) */}
-          <form onSubmit={handleSearchSubmit} className="hidden md:flex flex-grow max-w-lg mx-3 lg:mx-6 relative items-center">
+          <form ref={navbarSearchRef} onSubmit={handleSearchSubmit} className="hidden md:flex flex-grow max-w-lg mx-3 lg:mx-6 relative items-center">
             <input
               type="text"
               placeholder="Search Books..."
@@ -142,6 +300,7 @@ export default function Navbar() {
             <button type="submit" className="absolute right-4 text-slate-400 hover:text-brand-400 transition-colors">
               <Search className="h-4.5 w-4.5" />
             </button>
+            {renderSuggestions()}
           </form>
 
           {/* Action Buttons (Desktop) */}
@@ -225,7 +384,7 @@ export default function Navbar() {
 
         {/* Mobile Search Bar Row (visible on small viewports) */}
         <div className="md:hidden pb-4 pt-1">
-          <form onSubmit={handleSearchSubmit} className="relative flex items-center w-full">
+          <form ref={mobileSearchRef} onSubmit={handleSearchSubmit} className="relative flex items-center w-full">
             <input
               type="text"
               placeholder="Search Books..."
@@ -236,6 +395,7 @@ export default function Navbar() {
             <button type="submit" className="absolute right-4 text-slate-400 hover:text-brand-400 transition-colors">
               <Search className="h-4.5 w-4.5" />
             </button>
+            {renderSuggestions()}
           </form>
         </div>
       </div>
@@ -250,7 +410,7 @@ export default function Navbar() {
                   <span className="text-slate-700 select-none px-1">|</span>
                 )}
                 <Link
-                  to={cat.path}
+                  to={`/books?category=${encodeURIComponent(cat.name)}`}
                   className="text-xs sm:text-sm font-semibold tracking-wide text-slate-300 hover:text-[#38bdf8] transition-colors shrink-0 px-2 py-1 rounded-lg"
                 >
                   {cat.name}
