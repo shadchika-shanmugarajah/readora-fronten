@@ -19,7 +19,7 @@ export default function Navbar() {
   const [categories, setCategories] = useState([
     { name: 'Fiction' },
     { name: 'Non Fiction' },
-    { name: 'Kavithai (Poetry)' },
+    { name: 'Kavithai (Poem)' },
     { name: 'Novel' },
     { name: 'Short Stories' },
     { name: 'History' },

@@ -28,7 +28,7 @@ export default function AdminDashboard({ initialTab = 'books' }) {
   const [categories, setCategories] = useState([
     { _id: 'cat_1', name: 'Fiction' },
     { _id: 'cat_2', name: 'Non Fiction' },
-    { _id: 'cat_3', name: 'Kavithai (Poetry)' },
+    { _id: 'cat_3', name: 'Kavithai (Poem)' },
     { _id: 'cat_4', name: 'Novel' },
     { _id: 'cat_5', name: 'Short Stories' },
     { _id: 'cat_6', name: 'History' },
