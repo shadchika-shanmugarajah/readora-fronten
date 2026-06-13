@@ -19,18 +19,13 @@ export default function Navbar() {
   const [categories, setCategories] = useState([
     { name: 'Fiction' },
     { name: 'Non Fiction' },
-    { name: 'Kavithai (Poem)' },
-    { name: 'Novel' },
-    { name: 'Short Stories' },
-    { name: 'History' },
-    { name: 'Education' },
     { name: 'Children\'s Books' },
-    { name: 'Religion' },
-    { name: 'Biography' },
-    { name: 'Science' },
-    { name: 'Technology' },
-    { name: 'Business' },
-    { name: 'Self Development' }
+    { name: 'Competitive Exams' },
+    { name: 'School Books' },
+    { name: 'Magazines' },
+    { name: 'Gifts' },
+    { name: 'Stationery' },
+    { name: 'Kavi (Poem)' }
   ]);
   const [suggestions, setSuggestions] = useState({ books: [], authors: [], publishers: [] });
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -403,7 +398,7 @@ export default function Navbar() {
       {/* Category Navigation Sub-Bar */}
       <div className="border-t border-b border-white/5 bg-[#002738] py-3 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-start md:justify-center gap-2 sm:gap-4 overflow-x-auto no-scrollbar py-1">
+          <div className="flex items-center justify-start gap-2 sm:gap-4 overflow-x-auto no-scrollbar py-1">
             {categories.map((cat, idx) => (
               <React.Fragment key={cat.name}>
                 {idx > 0 && (
