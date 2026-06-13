@@ -187,6 +187,71 @@ export default function BookDetails() {
             </p>
           </div>
 
+          {/* Specifications Table */}
+          <div className="p-6 rounded-2xl glass-card border border-white/5 space-y-6">
+            <h3 className="text-lg font-bold font-display text-slate-205 light:text-slate-900 border-b border-white/5 pb-3">
+              Book Details & Specifications
+            </h3>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+              <div className="flex justify-between border-b border-white/5 pb-2 light:border-slate-200">
+                <span className="text-slate-400 light:text-slate-500">Author</span>
+                <span className="font-semibold text-slate-200 light:text-slate-800">{book.author}</span>
+              </div>
+              
+              <div className="flex justify-between border-b border-white/5 pb-2 light:border-slate-200">
+                <span className="text-slate-400 light:text-slate-500">Publisher</span>
+                <span className="font-semibold text-slate-200 light:text-slate-800">{book.publisher || 'Not Specified'}</span>
+              </div>
+              
+              <div className="flex justify-between border-b border-white/5 pb-2 light:border-slate-200">
+                <span className="text-slate-400 light:text-slate-500">Number of Pages</span>
+                <span className="font-semibold text-slate-200 light:text-slate-800">{book.pages || 'N/A'}</span>
+              </div>
+              
+              <div className="flex justify-between border-b border-white/5 pb-2 light:border-slate-200">
+                <span className="text-slate-400 light:text-slate-500">Language</span>
+                <span className="font-semibold text-slate-200 light:text-slate-800">{book.language || 'English'}</span>
+              </div>
+              
+              <div className="flex justify-between border-b border-white/5 pb-2 sm:border-none sm:pb-0 light:border-slate-200">
+                <span className="text-slate-400 light:text-slate-500">Publication Year</span>
+                <span className="font-semibold text-slate-200 light:text-slate-800">{book.publishYear || 'N/A'}</span>
+              </div>
+              
+              <div className="flex justify-between border-b border-white/5 pb-2 sm:border-none sm:pb-0 light:border-slate-200">
+                <span className="text-slate-400 light:text-slate-500">ISBN</span>
+                <span className="font-semibold text-slate-200 light:text-slate-800">{book.isbn || 'N/A'}</span>
+              </div>
+
+              <div className="flex justify-between sm:col-span-2 pt-2 border-t border-white/5 light:border-slate-200">
+                <span className="text-slate-400 light:text-slate-500">Category</span>
+                <span className="font-semibold text-brand-400">{book.category}</span>
+              </div>
+
+              <div className="flex justify-between sm:col-span-2 pt-2 border-t border-white/5 light:border-slate-200">
+                <span className="text-slate-400 light:text-slate-500">Availability Status</span>
+                <span className={`font-bold flex items-center gap-1.5 ${
+                  (book.availabilityStatus || 'In Stock') === 'In Stock'
+                    ? 'text-emerald-400 light:text-emerald-600'
+                    : (book.availabilityStatus === 'Pre-Order')
+                    ? 'text-amber-450 light:text-amber-600'
+                    : 'text-rose-450 light:text-rose-600'
+                }`}>
+                  <span className={`h-2 w-2 rounded-full ${
+                    (book.availabilityStatus || 'In Stock') === 'In Stock'
+                      ? 'bg-emerald-500'
+                      : (book.availabilityStatus === 'Pre-Order')
+                      ? 'bg-amber-500'
+                      : 'bg-rose-500'
+                  }`} />
+                  {book.availabilityStatus || 'In Stock'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+
           {/* Checkout controls */}
           <div className="flex flex-col sm:flex-row items-center gap-4">
             {/* Quantity Selector */}
