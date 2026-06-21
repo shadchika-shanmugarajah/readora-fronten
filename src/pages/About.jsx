@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Globe, Lock, BookOpen, Headphones, DollarSign, ArrowRight, ShieldCheck, Compass, CheckCircle, ShoppingBag, MessageSquare, PhoneCall } from 'lucide-react';
+import SEO from '../components/SEO';
 
 export default function About() {
   const containerVariants = {
@@ -38,8 +39,31 @@ export default function About() {
     { number: '077 445 4785', clean: '94774454785' }
   ];
 
+  const getAboutSchema = () => {
+    return {
+      "@context": "https://schema.org",
+      "@type": "AboutPage",
+      "@id": "https://readora.lk/about#webpage",
+      "url": "https://readora.lk/about",
+      "name": "About Readora - Online Bookstore Sri Lanka",
+      "description": "About Readora.lk - Sri Lanka's trusted bookstore sourcing Tamil, Sinhala, and English literature globally with fast home delivery and WhatsApp checkout.",
+      "publisher": {
+        "@type": "BookStore",
+        "@id": "https://readora.lk/#organization",
+        "name": "Readora",
+        "url": "https://readora.lk"
+      }
+    };
+  };
+
   return (
     <div className="relative overflow-hidden min-h-screen py-16 bg-slate-950 text-slate-100 light:bg-slate-50 light:text-slate-900 transition-colors duration-300">
+      <SEO 
+        title="About Us | Sri Lanka's Trusted Bookstore - Readora"
+        description="Learn more about Readora.lk, Sri Lanka's leading online bookstore. Sourcing premium Tamil, Sinhala, and English books globally at affordable prices."
+        canonicalUrl="https://readora.lk/about"
+        schemaMarkup={getAboutSchema()}
+      />
       {/* Decorative Radial Gradients */}
       <div className="absolute top-0 inset-x-0 -z-10 h-96 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-brand-900/20 via-slate-950/0 to-slate-950/0 pointer-events-none" />
       <div className="absolute bottom-20 right-10 w-80 h-80 rounded-full bg-purple-500/5 blur-[120px] pointer-events-none" />

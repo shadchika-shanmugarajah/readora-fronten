@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, ChevronRight, BookOpen, Star } from 'lucide-react';
 import BookCard from '../components/BookCard';
+import SEO from '../components/SEO';
 import { API_BASE_URL } from '../config';
 
 export default function Home() {
@@ -72,8 +73,60 @@ export default function Home() {
     fetchFeatured();
   }, []);
 
+  const getHomeSchema = () => {
+    return {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "BookStore",
+          "@id": "https://readora.lk/#organization",
+          "name": "Readora",
+          "url": "https://readora.lk",
+          "logo": "https://readora.lk/readaura_emblem.png",
+          "telephone": "+94766572148",
+          "priceRange": "$$",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Main Street",
+            "addressLocality": "Colombo",
+            "addressRegion": "Western Province",
+            "postalCode": "00100",
+            "addressCountry": "LK"
+          },
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+94766572148",
+            "contactType": "customer service",
+            "areaServed": "LK",
+            "availableLanguage": ["Tamil", "English", "Sinhala"]
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://readora.lk/#website",
+          "name": "Readora",
+          "url": "https://readora.lk",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://readora.lk/books?search={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
+    };
+  };
+
   return (
     <div className="space-y-20 min-h-screen">
+      <SEO 
+        title="Online Bookstore Sri Lanka | Buy Tamil, English & Sinhala Books"
+        description="Buy books online in Sri Lanka at Readora.lk. Fast delivery on Tamil books, English literature, Sinhala novels, school books, and poetry. Easy WhatsApp ordering."
+        canonicalUrl="https://readora.lk"
+        schemaMarkup={getHomeSchema()}
+      />
       {/* Premium Hero Banner Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         <motion.div

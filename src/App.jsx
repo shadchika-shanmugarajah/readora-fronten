@@ -11,6 +11,10 @@ import Login from './pages/Login';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import About from './pages/About';
+import AuthorPage from './pages/AuthorPage';
+import PublisherPage from './pages/PublisherPage';
+import CategoryPage from './pages/CategoryPage';
+import SpecialListsPage from './pages/SpecialListsPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
@@ -45,6 +49,13 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           <Route path="/books" element={<Books />} />
           <Route path="/book/:id" element={<BookDetails />} />
+          <Route path="/books/:slug" element={<BookDetails />} />
+          <Route path="/authors/:slug" element={<AuthorPage />} />
+          <Route path="/publishers/:slug" element={<PublisherPage />} />
+          <Route path="/categories/:slug" element={<CategoryPage />} />
+          <Route path="/offers" element={<SpecialListsPage type="offers" />} />
+          <Route path="/new-releases" element={<SpecialListsPage type="new-releases" />} />
+          <Route path="/best-selling" element={<SpecialListsPage type="best-selling" />} />
           <Route path="/about" element={<About />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/login" element={<Login />} />

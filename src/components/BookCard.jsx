@@ -85,13 +85,14 @@ export default function BookCard({ book }) {
           <img 
             src={book.coverImage} 
             alt={book.title} 
+            title={book.title}
             className="w-full h-full object-contain transform group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
           />
           {/* Overlay Actions on Hover */}
           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
             <Link 
-              to={`/book/${book._id}`}
+              to={`/books/${book.slug || book._id}`}
               className="p-3 rounded-full bg-white text-slate-950 hover:bg-brand-500 hover:text-white transition-all transform hover:scale-110 active:scale-95"
               title="View Details"
             >
@@ -157,7 +158,7 @@ export default function BookCard({ book }) {
       {/* Action Buttons underneath */}
       <div style={{ transform: 'translateZ(15px)' }} className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-white/5">
         <Link 
-          to={`/book/${book._id}`}
+          to={`/books/${book.slug || book._id}`}
           className="flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-semibold rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white transition-all light:text-slate-700 light:border-slate-300 light:hover:bg-slate-200"
         >
           View Details

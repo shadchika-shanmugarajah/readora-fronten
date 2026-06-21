@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "https://readora-backend-2.onrender.com/api/seo/sitemap.xml"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "https://readora-backend-2.onrender.com/api/seo/robots.txt"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

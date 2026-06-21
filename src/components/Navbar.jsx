@@ -6,6 +6,8 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { API_BASE_URL } from '../config';
 
+const cleanSlug = (text) => text ? text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') : '';
+
 export default function Navbar() {
   const { user } = useAuth();
   const { cartCount } = useCart();
@@ -170,7 +172,7 @@ export default function Navbar() {
                     key={b._id}
                     type="button"
                     onClick={() => {
-                      navigate(`/book/${b._id}`);
+                      navigate(`/books/${b.slug || b._id}`);
                       setShowSuggestions(false);
                     }}
                     className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 light:hover:bg-slate-100 transition-all text-left"
@@ -422,8 +424,8 @@ export default function Navbar() {
                 {idx > 0 && (
                   <span className="text-slate-700 select-none px-1">|</span>
                 )}
-                <Link
-                  to={`/books?category=${encodeURIComponent(cat.name)}`}
+                 <Link
+                  to={`/categories/${cleanSlug(cat.name)}`}
                   className="text-xs sm:text-sm font-semibold tracking-wide text-slate-300 hover:text-[#38bdf8] transition-colors shrink-0 px-2 py-1 rounded-lg"
                 >
                   {cat.name}

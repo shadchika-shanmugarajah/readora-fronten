@@ -6,10 +6,11 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
 import BookCard from '../components/BookCard';
+import SEO from '../components/SEO';
 import { API_BASE_URL } from '../config';
 
 export default function BookDetails() {
-  const { id } = useParams();
+  const { id, slug } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { user } = useAuth();
@@ -29,12 +30,20 @@ export default function BookDetails() {
   const [rotateX, setRotateX] = useState(0);
   const [rotateY, setRotateY] = useState(0);
 
+
   useEffect(() => {
     const fetchBookAndRelated = async () => {
       setLoading(true);
       try {
+        let fetchUrl = `${API_BASE_URL}/books/${id}`;
+        if (slug) {
+          fetchUrl = `${API_BASE_URL}/books/slug/${slug}`;
+        } else if (id && !/^[0-9a-fA-F]{24}$/.test(id)) {
+          fetchUrl = `${API_BASE_URL}/books/slug/${id}`;
+        }
+
         // Fetch current book
-        const bookRes = await fetch(`${API_BASE_URL}/books/${id}`);
+        const bookRes = await fetch(fetchUrl);
         if (!bookRes.ok) throw new Error("Book not found");
         const bookData = await bookRes.json();
         setBook(bookData);
@@ -44,7 +53,7 @@ export default function BookDetails() {
         if (relRes.ok) {
           const relData = await relRes.json();
           // Exclude current book
-          setRelatedBooks(relData.filter(b => b._id !== id).slice(0, 3));
+          setRelatedBooks(relData.filter(b => b._id !== bookData._id).slice(0, 3));
         }
       } catch (error) {
         console.error("Error fetching book details:", error);
@@ -56,7 +65,81 @@ export default function BookDetails() {
     };
 
     fetchBookAndRelated();
-  }, [id]);
+  }, [id, slug]);
+
+  const getSchemaMarkup = () => {
+    if (!book) return null;
+    const cleanSlug = (text) => text ? text.toLowerCase().replace(/[^a-z0-9]/g, '-') : '';
+    const bookSlug = book.slug || cleanSlug(book.title);
+    const bookUrl = `https://readora.lk/books/${bookSlug}`;
+    
+    return {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Book",
+          "@id": `${bookUrl}#book`,
+          "name": book.title,
+          "image": book.coverImage,
+          "description": book.description,
+          "isbn": book.isbn || undefined,
+          "numberOfPages": book.pages || undefined,
+          "inLanguage": book.language || "English",
+          "author": {
+            "@type": "Person",
+            "name": book.author,
+            "url": `https://readora.lk/authors/${cleanSlug(book.author)}`
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": book.publisher || "Readora",
+            "url": book.publisher ? `https://readora.lk/publishers/${cleanSlug(book.publisher)}` : undefined
+          },
+          "datePublished": book.publishYear ? book.publishYear.toString() : undefined
+        },
+        {
+          "@type": "Product",
+          "@id": `${bookUrl}#product`,
+          "name": book.title,
+          "image": book.coverImage,
+          "description": book.description,
+          "offers": {
+            "@type": "Offer",
+            "price": book.price.toString(),
+            "priceCurrency": "LKR",
+            "itemCondition": "https://schema.org/NewCondition",
+            "availability": book.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+            "url": bookUrl,
+            "priceValidUntil": "2027-12-31"
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": `${bookUrl}#breadcrumb`,
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://readora.lk"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Books",
+              "item": "https://readora.lk/books"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": book.title,
+              "item": bookUrl
+            }
+          ]
+        }
+      ]
+    };
+  };
 
   const handleMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -110,8 +193,19 @@ export default function BookDetails() {
     );
   }
 
+  const cleanSlug = (text) => text ? text.toLowerCase().replace(/[^a-z0-9]/g, '-') : '';
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-screen space-y-16">
+      <SEO 
+        title={`Buy ${book.title}`}
+        description={`Buy ${book.title} online in Sri Lanka with fast delivery. Published by ${book.publisher || 'Readora'} in ${book.publishYear || '2026'}. Price: ${book.price} LKR.`}
+        canonicalUrl={`https://readora.lk/books/${book.slug || cleanSlug(book.title)}`}
+        ogImage={book.coverImage}
+        ogType="book"
+        schemaMarkup={getSchemaMarkup()}
+      />
+
       {/* Back to Listing */}
       <div>
         <Link 
@@ -196,12 +290,20 @@ export default function BookDetails() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
               <div className="flex justify-between border-b border-white/5 pb-2 light:border-slate-200">
                 <span className="text-slate-400 light:text-slate-500">Author</span>
-                <span className="font-semibold text-slate-200 light:text-slate-800">{book.author}</span>
+                <Link to={`/authors/${cleanSlug(book.author)}`} className="font-semibold text-brand-400 hover:underline">
+                  {book.author}
+                </Link>
               </div>
               
               <div className="flex justify-between border-b border-white/5 pb-2 light:border-slate-200">
                 <span className="text-slate-400 light:text-slate-500">Publisher</span>
-                <span className="font-semibold text-slate-200 light:text-slate-800">{book.publisher || 'Not Specified'}</span>
+                {book.publisher ? (
+                  <Link to={`/publishers/${cleanSlug(book.publisher)}`} className="font-semibold text-brand-400 hover:underline">
+                    {book.publisher}
+                  </Link>
+                ) : (
+                  <span className="font-semibold text-slate-200 light:text-slate-800">Not Specified</span>
+                )}
               </div>
               
               <div className="flex justify-between border-b border-white/5 pb-2 light:border-slate-200">
@@ -226,7 +328,9 @@ export default function BookDetails() {
 
               <div className="flex justify-between sm:col-span-2 pt-2 border-t border-white/5 light:border-slate-200">
                 <span className="text-slate-400 light:text-slate-500">Category</span>
-                <span className="font-semibold text-brand-400">{book.category}</span>
+                <Link to={`/categories/${cleanSlug(book.category)}`} className="font-semibold text-brand-400 hover:underline">
+                  {book.category}
+                </Link>
               </div>
 
               <div className="flex justify-between sm:col-span-2 pt-2 border-t border-white/5 light:border-slate-200">
