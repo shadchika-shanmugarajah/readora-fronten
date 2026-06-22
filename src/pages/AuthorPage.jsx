@@ -153,7 +153,7 @@ export default function AuthorPage() {
             <span className="px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-wider bg-brand-600/20 text-brand-400 border border-brand-500/30">
               {customAuthor.role}
             </span>
-            <h1 className="text-3xl sm:text-5xl font-bold font-display tracking-tight text-slate-100 mt-2">
+            <h1 className="text-3xl sm:text-5xl font-bold font-display tracking-tight text-slate-100 light:text-slate-900 mt-2">
               {finalName}
             </h1>
           </div>

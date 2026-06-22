@@ -134,11 +134,7 @@ export default function CategoryPage() {
       {/* Category header */}
       <div className="p-8 sm:p-10 rounded-3xl glass-card border border-white/5 space-y-4">
         <div>
-          <span className="px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-wider bg-brand-600/20 text-brand-400 border border-brand-500/30 inline-flex items-center gap-1.5">
-            <Tag className="h-3 w-3" />
-            <span>Category Collection</span>
-          </span>
-          <h1 className="text-3xl sm:text-5xl font-bold font-display tracking-tight text-slate-100 mt-2">
+          <h1 className="text-3xl sm:text-5xl font-bold font-display tracking-tight text-slate-100 light:text-slate-900 mt-2">
             {finalName} Literature
           </h1>
         </div>

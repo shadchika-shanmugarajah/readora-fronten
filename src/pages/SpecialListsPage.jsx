@@ -131,7 +131,7 @@ export default function SpecialListsPage({ type }) {
             {config.icon}
             <span>{config.badge}</span>
           </span>
-          <h1 className="text-3xl sm:text-5xl font-bold font-display tracking-tight text-slate-100 mt-2">
+          <h1 className="text-3xl sm:text-5xl font-bold font-display tracking-tight text-slate-100 light:text-slate-900 mt-2">
             {config.title}
           </h1>
         </div>
