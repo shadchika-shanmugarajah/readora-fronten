@@ -148,7 +148,6 @@ export default function Navbar() {
     { name: 'Books', path: '/books' },
     { name: 'Wishlist', path: '/books?wishlist=true' },
     { name: 'About Us', path: '/about' },
-    ...(user?.role === 'admin' ? [{ name: 'Admin Portal', path: '/admin' }] : []),
   ];
 
   const renderSuggestions = () => {
@@ -293,14 +292,7 @@ export default function Navbar() {
             >
               About Us
             </Link>
-            {user?.role === 'admin' && (
-              <Link 
-                to="/admin" 
-                className={`transition-colors duration-200 ${isActive('/admin') ? 'text-brand-400' : 'text-slate-300 hover:text-white light:text-slate-200 light:hover:text-white'}`}
-              >
-                Admin Portal
-              </Link>
-            )}
+            {/* Navigation links ended here */}
           </div>
 
           {/* Large Centered Search Bar (Desktop) */}

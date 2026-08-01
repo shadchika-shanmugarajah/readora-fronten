@@ -321,21 +321,7 @@ Please update the order status.`;
             </button>
           </div>
 
-          {/* Admin Dashboard Quick Link */}
-          {user.role === 'admin' && (
-            <div className="p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 flex items-center justify-between">
-              <div className="space-y-0.5">
-                <h4 className="text-sm font-bold text-amber-300">Admin Control Room</h4>
-                <p className="text-[10px] text-slate-400">Inventory and order processing dashboard</p>
-              </div>
-              <Link
-                to="/admin"
-                className="p-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white transition-all transform active:scale-95"
-              >
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          )}
+          {/* Removed Admin Dashboard Quick Link */}
 
           {/* Customer Reading History progress */}
           {user.role !== 'admin' && (
