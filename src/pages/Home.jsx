@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Search, ChevronRight, BookOpen, Star } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, ChevronLeft, ChevronRight, BookOpen, Star } from 'lucide-react';
 import BookCard from '../components/BookCard';
 import SEO from '../components/SEO';
 import { API_BASE_URL } from '../config';
@@ -10,6 +10,12 @@ export default function Home() {
   const [featuredBooks, setFeaturedBooks] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  
+  // Promotional Banners state
+  const [promotionalBanners, setPromotionalBanners] = useState([]);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Fallback single settings banner state
   const [bannerUrl, setBannerUrl] = useState('/bookstore_hero_banner.png');
   const [bannerVersion, setBannerVersion] = useState('');
   const navigate = useNavigate();
@@ -23,7 +29,21 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const fetchBanner = async () => {
+    const fetchBannersAndSettings = async () => {
+      // 1. Fetch promotional banners
+      try {
+        const res = await fetch(`${API_BASE_URL}/banners?t=${Date.now()}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setPromotionalBanners(data);
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to fetch promo banners:", err);
+      }
+
+      // 2. Fetch fallback static banner
       try {
         const res = await fetch(`${API_BASE_URL}/settings/book_store_hero_banner?t=${Date.now()}`);
         if (res.ok) {
@@ -49,8 +69,17 @@ export default function Home() {
       }
     };
 
-    fetchBanner();
+    fetchBannersAndSettings();
   }, []);
+
+  // Automatic slideshow interval for promo banners
+  useEffect(() => {
+    if (promotionalBanners.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % promotionalBanners.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [promotionalBanners]);
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -129,19 +158,92 @@ export default function Home() {
       />
       {/* Premium Hero Banner Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="relative w-full aspect-[2.35/1] md:aspect-[3/1] rounded-3xl overflow-hidden border border-white/10 light:border-slate-200 shadow-3d-glow hover:shadow-3d-glow-hover transition-all duration-500 cursor-pointer"
-          onClick={() => navigate('/books')}
-        >
-          <img 
-            src={getBustedUrl(bannerUrl, bannerVersion)} 
-            alt="ReadAura Bookstore Campaign Banner - 15% OFF ALL ORDERS" 
-            className="w-full h-full object-cover transform hover:scale-[1.02] transition-transform duration-700 ease-out"
-          />
-        </motion.div>
+        {promotionalBanners.length > 0 ? (
+          <div className="relative w-full aspect-[2.35/1] md:aspect-[3/1] rounded-3xl overflow-hidden border border-white/10 light:border-slate-200 shadow-3d-glow hover:shadow-3d-glow-hover transition-all duration-500 group">
+            
+            {/* Slides container */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentSlide}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+                className="w-full h-full relative cursor-pointer"
+                onClick={() => navigate(promotionalBanners[currentSlide].link || '/books')}
+              >
+                {/* Background image */}
+                <img 
+                  src={promotionalBanners[currentSlide].imageUrl} 
+                  alt={promotionalBanners[currentSlide].title} 
+                  className="w-full h-full object-cover transform hover:scale-[1.01] transition-transform duration-700 ease-out"
+                />
+                
+                {/* Gradient text overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent flex flex-col justify-end p-6 md:p-12">
+                  <motion.h3 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-base sm:text-2xl md:text-3xl font-black font-display text-white uppercase tracking-wider drop-shadow-md"
+                  >
+                    {promotionalBanners[currentSlide].title}
+                  </motion.h3>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Slide Navigation Left Arrow */}
+            {promotionalBanners.length > 1 && (
+              <>
+                <button
+                  onClick={() => setCurrentSlide(prev => (prev - 1 + promotionalBanners.length) % promotionalBanners.length)}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-slate-950/50 hover:bg-slate-950/80 text-white/70 hover:text-white transition-all opacity-0 group-hover:opacity-100 z-10"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+
+                {/* Slide Navigation Right Arrow */}
+                <button
+                  onClick={() => setCurrentSlide(prev => (prev + 1) % promotionalBanners.length)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-slate-950/50 hover:bg-slate-950/80 text-white/70 hover:text-white transition-all opacity-0 group-hover:opacity-100 z-10"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+
+                {/* Navigation Dots */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                  {promotionalBanners.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentSlide(idx)}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        idx === currentSlide 
+                          ? 'w-6 bg-brand-500' 
+                          : 'w-1.5 bg-slate-500/50 hover:bg-slate-400'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+
+          </div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="relative w-full aspect-[2.35/1] md:aspect-[3/1] rounded-3xl overflow-hidden border border-white/10 light:border-slate-200 shadow-3d-glow hover:shadow-3d-glow-hover transition-all duration-500 cursor-pointer"
+            onClick={() => navigate('/books')}
+          >
+            <img 
+              src={getBustedUrl(bannerUrl, bannerVersion)} 
+              alt="ReadAura Bookstore Campaign Banner - 15% OFF ALL ORDERS" 
+              className="w-full h-full object-cover transform hover:scale-[1.02] transition-transform duration-700 ease-out"
+            />
+          </motion.div>
+        )}
       </section>
 
       {/* Animated Book Showcase Slider */}
