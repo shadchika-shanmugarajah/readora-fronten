@@ -230,6 +230,15 @@ export default function Inventory() {
                 <tr>
                   <td colSpan="7" className="p-12 text-center text-slate-500">Loading stock records...</td>
                 </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="7" className="p-12 text-center text-rose-450 font-bold bg-rose-500/5">
+                    <div className="flex items-center justify-center gap-2">
+                      <ShieldAlert className="h-4.5 w-4.5" />
+                      <span>{error}</span>
+                    </div>
+                  </td>
+                </tr>
               ) : paginatedInventory.length === 0 ? (
                 <tr>
                   <td colSpan="7" className="p-12 text-center text-slate-500">No products match selection filters.</td>
