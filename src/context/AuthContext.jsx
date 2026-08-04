@@ -79,11 +79,11 @@ export const AuthProvider = ({ children }) => {
       console.warn("Backend server offline, logging in using mock auth simulation...");
       // Simulate successful login offline for demo integrity
       if (username && password) {
-        if (username === 'admin' && password === 'admin123') {
+        if (username === 'Meyaw' && password === 'Meyaw10607$') {
           const mockUser = {
             id: 'user_admin_offline',
             phoneNumber: '0774454785',
-            name: 'Administrator',
+            name: 'Sysadmin',
             address: 'Head Office',
             role: 'admin'
           };
