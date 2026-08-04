@@ -190,6 +190,15 @@ export default function Publishers() {
                 <tr>
                   <td colSpan="4" className="p-12 text-center text-slate-500">Loading publishers...</td>
                 </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="4" className="p-12 text-center text-rose-450 font-bold bg-rose-500/5">
+                    <div className="flex items-center justify-center gap-2">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>{error}</span>
+                    </div>
+                  </td>
+                </tr>
               ) : filteredPublishers.length === 0 ? (
                 <tr>
                   <td colSpan="4" className="p-12 text-center text-slate-500">No publishers found.</td>
