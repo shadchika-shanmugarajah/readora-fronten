@@ -180,16 +180,19 @@ export default function Home() {
                 />
                 
                 {/* Gradient text overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent flex flex-col justify-end p-6 md:p-12">
-                  <motion.h3 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="text-base sm:text-2xl md:text-3xl font-black font-display text-white uppercase tracking-wider drop-shadow-md"
-                  >
-                    {promotionalBanners[currentSlide].title}
-                  </motion.h3>
-                </div>
+                {promotionalBanners[currentSlide].title && promotionalBanners[currentSlide].title.trim() && (
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent flex flex-col justify-end p-6 md:p-12">
+                    <motion.h3 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                      style={{ color: promotionalBanners[currentSlide].textColor || '#ffffff' }}
+                      className="text-base sm:text-2xl md:text-3xl font-black font-display uppercase tracking-wider drop-shadow-md"
+                    >
+                      {promotionalBanners[currentSlide].title}
+                    </motion.h3>
+                  </div>
+                )}
               </motion.div>
             </AnimatePresence>
 

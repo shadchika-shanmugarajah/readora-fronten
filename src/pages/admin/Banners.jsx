@@ -18,6 +18,7 @@ export default function Banners() {
   const [editingId, setEditingId] = useState(null);
   const [formFields, setFormFields] = useState({
     title: '',
+    textColor: '#ffffff',
     imageUrl: '',
     link: '/books',
     active: true,
@@ -35,7 +36,7 @@ export default function Banners() {
       if (Array.isArray(data)) {
         setBanners(data);
       } else {
-        setError('Failed to fetch banners.');
+        setError('Failed to fetch promotional banners.');
       }
     } catch (err) {
       setError('Network error. Failed to load banners.');
@@ -58,6 +59,7 @@ export default function Banners() {
     setEditingId(null);
     setFormFields({
       title: 'Mega Summer Sale!',
+      textColor: '#ffffff',
       imageUrl: 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&q=80&w=1200',
       link: '/books?category=Fiction',
       active: true,
@@ -70,7 +72,8 @@ export default function Banners() {
     setIsEditMode(true);
     setEditingId(banner._id);
     setFormFields({
-      title: banner.title,
+      title: banner.title || '',
+      textColor: banner.textColor || '#ffffff',
       imageUrl: banner.imageUrl,
       link: banner.link || '/books',
       active: banner.active !== false,
@@ -100,8 +103,8 @@ export default function Banners() {
 
   const handleSaveBanner = async (e) => {
     e.preventDefault();
-    if (!formFields.title.trim() || !formFields.imageUrl.trim()) {
-      alert('Please fill in banner title and image link.');
+    if (!formFields.imageUrl.trim()) {
+      alert('Please provide a banner image link or upload a file.');
       return;
     }
 
@@ -304,17 +307,38 @@ export default function Banners() {
               {/* Form panel */}
               <form onSubmit={handleSaveBanner} className="space-y-4">
                 
-                {/* Title */}
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-400 uppercase">Banner Overlay Title *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formFields.title}
-                    onChange={(e) => setFormFields(prev => ({ ...prev, title: e.target.value }))}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
-                    placeholder="e.g. 50% discount on poem books!"
-                  />
+                {/* Title & Text Color Row */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Title (Takes 2/3 cols) */}
+                  <div className="md:col-span-2 space-y-1">
+                    <label className="font-bold text-slate-400 uppercase">Banner Overlay Title (Optional)</label>
+                    <input
+                      type="text"
+                      value={formFields.title}
+                      onChange={(e) => setFormFields(prev => ({ ...prev, title: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
+                      placeholder="Leave empty for image-only banner"
+                    />
+                  </div>
+                  {/* Text Color Picker (Takes 1/3 col) */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400 uppercase">Text Color</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={formFields.textColor}
+                        onChange={(e) => setFormFields(prev => ({ ...prev, textColor: e.target.value }))}
+                        className="w-10 h-9 p-0 bg-transparent border-0 cursor-pointer rounded-lg overflow-hidden shrink-0"
+                      />
+                      <input
+                        type="text"
+                        value={formFields.textColor}
+                        onChange={(e) => setFormFields(prev => ({ ...prev, textColor: e.target.value }))}
+                        className="w-full px-2 py-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none font-mono text-[10px] text-center"
+                        placeholder="#ffffff"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                  {/* Image URL */}
@@ -415,20 +439,27 @@ export default function Banners() {
                     onError={(e) => e.target.src = 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&q=80&w=1200'}
                   />
                   {/* Slider Content */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
-                  
-                  <div className="relative z-10 p-6 space-y-3 text-left">
-                    <span className="px-2.5 py-1 rounded bg-brand-600 text-white font-extrabold text-[8px] uppercase tracking-widest">Featured Promo</span>
-                    <h2 className="text-xl font-black text-white leading-tight uppercase font-display max-w-sm drop-shadow-md">
-                      {formFields.title || 'YOUR OVERLAY TITLE GOES HERE'}
-                    </h2>
-                    <button 
-                      type="button"
-                      className="px-4 py-2 bg-white text-slate-950 font-bold rounded-xl text-[10px] uppercase shadow-lg shadow-white/10 hover:scale-102 transition-transform"
-                    >
-                      Browse Items
-                    </button>
-                  </div>
+                  {formFields.title && formFields.title.trim() && (
+                    <>
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+                      
+                      <div className="relative z-10 p-6 space-y-3 text-left">
+                        <span className="px-2.5 py-1 rounded bg-brand-600 text-white font-extrabold text-[8px] uppercase tracking-widest">Featured Promo</span>
+                        <h2 
+                          style={{ color: formFields.textColor || '#ffffff' }}
+                          className="text-xl font-black leading-tight uppercase font-display max-w-sm drop-shadow-md"
+                        >
+                          {formFields.title}
+                        </h2>
+                        <button 
+                          type="button"
+                          className="px-4 py-2 bg-white text-slate-950 font-bold rounded-xl text-[10px] uppercase shadow-lg shadow-white/10 hover:scale-102 transition-transform pointer-events-none"
+                        >
+                          Browse Items
+                        </button>
+                      </div>
+                    </>
+                  )}
 
                   {/* Dot navigation indicators */}
                   <div className="absolute bottom-4 right-6 flex gap-1.5 z-10">
