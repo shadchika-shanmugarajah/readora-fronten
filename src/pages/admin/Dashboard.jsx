@@ -331,10 +331,10 @@ export default function Dashboard() {
                 <div key={o._id} className="flex items-center justify-between gap-3 text-xs bg-slate-900/30 p-2.5 rounded-2xl border border-slate-850/40">
                   <div>
                     <p className="font-bold text-slate-300 flex items-center gap-1.5">
-                      <span>{o.userId?.name || 'Guest User'}</span>
+                      <span>{o.customerName || o.userId?.name || 'Guest User'}</span>
                       <span className="text-[9px] font-normal text-slate-500">({new Date(o.createdAt).toLocaleDateString()})</span>
                     </p>
-                    <p className="text-[10px] text-slate-500">{o.items?.length || 0} books • {formatCurrency(o.total || o.totalAmount)}</p>
+                    <p className="text-[10px] text-slate-500">{o.items?.length || 0} books • {formatCurrency(o.totalPrice || o.total || o.totalAmount)}</p>
                   </div>
                   <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase shrink-0 ${
                     o.status === 'completed' || o.status === 'delivered'
