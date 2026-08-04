@@ -227,6 +227,25 @@ export default function BookManagement() {
     setShowModal(true);
   };
 
+  const handleCoverUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size exceeds 5MB limit.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormFields(prev => ({
+        ...prev,
+        coverImage: reader.result
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Save Book Form (Add/Update)
   const handleSaveBook = async (e) => {
     e.preventDefault();
@@ -804,15 +823,49 @@ export default function BookManagement() {
                 <h4 className="font-bold text-brand-400 uppercase tracking-widest text-[9px] border-b border-slate-850 pb-1">5. Images Gallery</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Primary Cover */}
-                  <div className="space-y-1">
-                    <label className="font-bold text-slate-400 uppercase tracking-wider">Cover Image URL *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formFields.coverImage}
-                      onChange={(e) => setFormFields(prev => ({ ...prev, coverImage: e.target.value }))}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
-                    />
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <label className="font-bold text-slate-400 uppercase tracking-wider">Cover Image (URL or PC Upload) *</label>
+                      <span className="text-[10px] text-brand-400 font-bold uppercase">Base64 Supported</span>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      <input
+                        type="text"
+                        placeholder="Paste Cover Image URL..."
+                        value={formFields.coverImage.startsWith('data:image') ? 'Uploaded from PC (Base64 Binary)' : formFields.coverImage}
+                        onChange={(e) => setFormFields(prev => ({ ...prev, coverImage: e.target.value }))}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
+                      />
+                      <div className="flex items-center justify-between gap-3 p-2 bg-slate-950/60 border border-slate-850 rounded-xl">
+                        <span className="text-[10px] text-slate-500 font-medium">Upload from PC:</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleCoverUpload}
+                          className="text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[9px] file:font-bold file:bg-slate-800 file:text-slate-200 hover:file:bg-slate-700 cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                    {formFields.coverImage && (
+                      <div className="mt-2.5 p-2 bg-slate-900/30 rounded-xl border border-slate-850/40 flex items-center gap-3">
+                        <img 
+                          src={formFields.coverImage} 
+                          alt="Cover Preview" 
+                          className="h-14 w-10 object-cover rounded shadow-md border border-slate-800"
+                          onError={(e) => e.target.src = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=600'}
+                        />
+                        <div className="text-[10px]">
+                          <p className="font-bold text-slate-350">Thumbnail Preview</p>
+                          <button
+                            type="button"
+                            onClick={() => setFormFields(prev => ({ ...prev, coverImage: '' }))}
+                            className="text-rose-450 hover:underline mt-0.5"
+                          >
+                            Remove Cover
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   {/* Multiple Gallery */}
                   <div className="space-y-1">
