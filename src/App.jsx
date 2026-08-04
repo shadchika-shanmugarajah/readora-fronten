@@ -23,6 +23,8 @@ import Categories from './pages/admin/Categories';
 import Authors from './pages/admin/Authors';
 import Publishers from './pages/admin/Publishers';
 import Banners from './pages/admin/Banners';
+import Reports from './pages/admin/Reports';
+import Settings from './pages/admin/Settings';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
@@ -63,8 +65,8 @@ function AppContent() {
         <Route path="dashboard/publishers" element={<Publishers />} />
         <Route path="dashboard/banners" element={<Banners />} />
         <Route path="dashboard/customers" element={<AdminPlaceholder />} />
-        <Route path="dashboard/reports" element={<AdminPlaceholder />} />
-        <Route path="dashboard/settings" element={<AdminPlaceholder />} />
+        <Route path="dashboard/reports" element={<Reports />} />
+        <Route path="dashboard/settings" element={<Settings />} />
       </Route>
 
       {/* Backward Compatibility Redirects */}
