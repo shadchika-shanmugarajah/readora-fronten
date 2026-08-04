@@ -25,6 +25,7 @@ import Publishers from './pages/admin/Publishers';
 import Banners from './pages/admin/Banners';
 import Reports from './pages/admin/Reports';
 import Settings from './pages/admin/Settings';
+import Customers from './pages/admin/Customers';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
@@ -64,7 +65,7 @@ function AppContent() {
         <Route path="dashboard/authors" element={<Authors />} />
         <Route path="dashboard/publishers" element={<Publishers />} />
         <Route path="dashboard/banners" element={<Banners />} />
-        <Route path="dashboard/customers" element={<AdminPlaceholder />} />
+        <Route path="dashboard/customers" element={<Customers />} />
         <Route path="dashboard/reports" element={<Reports />} />
         <Route path="dashboard/settings" element={<Settings />} />
       </Route>
