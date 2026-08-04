@@ -19,6 +19,10 @@ import Dashboard from './pages/admin/Dashboard';
 import BookManagement from './pages/admin/BookManagement';
 import Orders from './pages/admin/Orders';
 import Inventory from './pages/admin/Inventory';
+import Categories from './pages/admin/Categories';
+import Authors from './pages/admin/Authors';
+import Publishers from './pages/admin/Publishers';
+import Banners from './pages/admin/Banners';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
@@ -54,10 +58,10 @@ function AppContent() {
         <Route path="dashboard/books" element={<BookManagement />} />
         <Route path="dashboard/inventory" element={<Inventory />} />
         <Route path="dashboard/orders" element={<Orders />} />
-        <Route path="dashboard/categories" element={<AdminPlaceholder />} />
-        <Route path="dashboard/authors" element={<AdminPlaceholder />} />
-        <Route path="dashboard/publishers" element={<AdminPlaceholder />} />
-        <Route path="dashboard/banners" element={<AdminPlaceholder />} />
+        <Route path="dashboard/categories" element={<Categories />} />
+        <Route path="dashboard/authors" element={<Authors />} />
+        <Route path="dashboard/publishers" element={<Publishers />} />
+        <Route path="dashboard/banners" element={<Banners />} />
         <Route path="dashboard/customers" element={<AdminPlaceholder />} />
         <Route path="dashboard/reports" element={<AdminPlaceholder />} />
         <Route path="dashboard/settings" element={<AdminPlaceholder />} />
