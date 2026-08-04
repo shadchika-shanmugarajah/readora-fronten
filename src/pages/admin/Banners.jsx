@@ -79,6 +79,25 @@ export default function Banners() {
     setShowModal(true);
   };
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size exceeds 5MB limit.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormFields(prev => ({
+        ...prev,
+        imageUrl: reader.result
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSaveBanner = async (e) => {
     e.preventDefault();
     if (!formFields.title.trim() || !formFields.imageUrl.trim()) {
@@ -298,17 +317,31 @@ export default function Banners() {
                   />
                 </div>
 
-                {/* Image URL */}
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-400 uppercase">Banner Image Link URL *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formFields.imageUrl}
-                    onChange={(e) => setFormFields(prev => ({ ...prev, imageUrl: e.target.value }))}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
-                  />
-                </div>
+                 {/* Image URL */}
+                 <div className="space-y-2">
+                   <div className="flex justify-between items-center">
+                     <label className="font-bold text-slate-400 uppercase">Banner Image (URL or PC Upload) *</label>
+                     <span className="text-[10px] text-brand-400 font-bold uppercase">Base64 Supported</span>
+                   </div>
+                   <div className="grid grid-cols-1 gap-2">
+                     <input
+                       type="text"
+                       placeholder="Paste Banner Image URL..."
+                       value={formFields.imageUrl.startsWith('data:image') ? 'Uploaded from PC (Base64 Binary)' : formFields.imageUrl}
+                       onChange={(e) => setFormFields(prev => ({ ...prev, imageUrl: e.target.value }))}
+                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
+                     />
+                     <div className="flex items-center justify-between gap-3 p-2 bg-slate-950/60 border border-slate-850 rounded-xl">
+                       <span className="text-[10px] text-slate-500 font-medium">Upload from PC:</span>
+                       <input
+                         type="file"
+                         accept="image/*"
+                         onChange={handleImageUpload}
+                         className="text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[9px] file:font-bold file:bg-slate-800 file:text-slate-200 hover:file:bg-slate-700 cursor-pointer"
+                       />
+                     </div>
+                   </div>
+                 </div>
 
                 {/* Destination Link */}
                 <div className="space-y-1">
