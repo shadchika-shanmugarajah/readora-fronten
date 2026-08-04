@@ -14,6 +14,7 @@ export default function Home() {
   // Promotional Banners state
   const [promotionalBanners, setPromotionalBanners] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [loadingBanners, setLoadingBanners] = useState(true);
 
   // Fallback single settings banner state
   const [bannerUrl, setBannerUrl] = useState('/bookstore_hero_banner.png');
@@ -54,7 +55,6 @@ export default function Home() {
             setBannerVersion(version);
             localStorage.setItem('book_store_hero_banner', data.value);
             localStorage.setItem('book_store_hero_banner_version', version);
-            return;
           }
         }
       } catch (err) {
@@ -67,6 +67,8 @@ export default function Home() {
         setBannerUrl(customBanner);
         if (customVersion) setBannerVersion(customVersion);
       }
+      
+      setLoadingBanners(false);
     };
 
     fetchBannersAndSettings();
@@ -158,7 +160,9 @@ export default function Home() {
       />
       {/* Premium Hero Banner Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        {promotionalBanners.length > 0 ? (
+        {loadingBanners ? (
+          <div className="w-full aspect-[2.35/1] md:aspect-[3/1] rounded-3xl bg-slate-900/40 border border-slate-850/60 shimmer animate-pulse" />
+        ) : promotionalBanners.length > 0 ? (
           <div className="relative w-full aspect-[2.35/1] md:aspect-[3/1] rounded-3xl overflow-hidden border border-white/10 light:border-slate-200 shadow-3d-glow hover:shadow-3d-glow-hover transition-all duration-500 group">
             
             {/* Slides container */}
