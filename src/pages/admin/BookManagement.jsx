@@ -1,0 +1,963 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Plus, Search, Edit2, Archive, RotateCcw, Trash2, 
+  Upload, Download, AlertCircle, Check, X, Filter, ChevronLeft, ChevronRight
+} from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../config';
+
+export default function BookManagement() {
+  const { token, user } = useAuth();
+  
+  // Data State
+  const [books, setBooks] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+
+  // Table Controls
+  const [search, setSearch] = useState('');
+  const [catFilter, setCatFilter] = useState('All');
+  const [langFilter, setLangFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('active'); // active, archived, all
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  // Add/Edit Modal Form State
+  const [showModal, setShowModal] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [formFields, setFormFields] = useState({
+    title: '',
+    author: '',
+    price: '',
+    category: '',
+    description: '',
+    coverImage: '',
+    imagesInput: '', // comma-separated URL string
+    tamilTitle: '',
+    englishTitle: '',
+    sinhalaTitle: '',
+    discount: '0',
+    stock: '10',
+    language: 'English',
+    publisher: '',
+    pages: '0',
+    publishYear: new Date().getFullYear().toString(),
+    isbn: '',
+    availabilityStatus: 'In Stock',
+    featured: false,
+    bestSeller: false,
+    newArrival: false,
+    status: 'active'
+  });
+
+  // Bulk Import Modal State
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importJsonText, setImportJsonText] = useState('');
+  const [importError, setImportError] = useState('');
+
+  // Fetch all books (admin view includes archived)
+  const fetchBooks = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch(`${API_BASE_URL}/books/admin`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setBooks(data);
+      } else {
+        setError('Failed to fetch admin catalog.');
+      }
+    } catch (err) {
+      setError('Network error. Failed to load books.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch categories for the select input
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/categories`);
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setCategories(data);
+      }
+    } catch (err) {
+      console.warn('Failed to load categories', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchBooks();
+    fetchCategories();
+  }, [token]);
+
+  // Flash toast alert messages helper
+  const flashSuccess = (msg) => {
+    setSuccessMsg(msg);
+    setTimeout(() => setSuccessMsg(''), 4000);
+  };
+
+  // Archive a book
+  const handleArchive = async (id) => {
+    if (!window.confirm('Are you sure you want to archive this book? It will be hidden from the customer storefront.')) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/books/${id}/archive`, {
+        method: 'PUT',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (res.ok) {
+        flashSuccess('Book archived successfully!');
+        fetchBooks();
+      } else {
+        alert('Failed to archive book.');
+      }
+    } catch (err) {
+      alert('Error connecting to backend.');
+    }
+  };
+
+  // Restore an archived book
+  const handleRestore = async (id) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/books/${id}/restore`, {
+        method: 'PUT',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (res.ok) {
+        flashSuccess('Book restored successfully!');
+        fetchBooks();
+      } else {
+        alert('Failed to restore book.');
+      }
+    } catch (err) {
+      alert('Error connecting to backend.');
+    }
+  };
+
+  // Delete a book permanently
+  const handleDelete = async (id) => {
+    if (!window.confirm('CRITICAL: Are you sure you want to PERMANENTLY DELETE this book? This action cannot be undone.')) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/books/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        flashSuccess('Book deleted permanently.');
+        fetchBooks();
+      } else {
+        alert('Failed to delete book. Only super admins or admins can perform this action.');
+      }
+    } catch (err) {
+      alert('Error connecting to backend.');
+    }
+  };
+
+  // Open form modal for creating new book
+  const openCreateModal = () => {
+    setIsEditMode(false);
+    setEditingId(null);
+    setFormFields({
+      title: '',
+      author: '',
+      price: '',
+      category: categories[0]?.name || 'Fiction',
+      description: '',
+      coverImage: 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=600',
+      imagesInput: '',
+      tamilTitle: '',
+      englishTitle: '',
+      sinhalaTitle: '',
+      discount: '0',
+      stock: '10',
+      language: 'English',
+      publisher: '',
+      pages: '0',
+      publishYear: new Date().getFullYear().toString(),
+      isbn: '',
+      availabilityStatus: 'In Stock',
+      featured: false,
+      bestSeller: false,
+      newArrival: false,
+      status: 'active'
+    });
+    setShowModal(true);
+  };
+
+  // Open form modal for editing book
+  const openEditModal = (book) => {
+    setIsEditMode(true);
+    setEditingId(book._id);
+    setFormFields({
+      title: book.title || '',
+      author: book.author || '',
+      price: book.price !== undefined ? book.price.toString() : '',
+      category: book.category || '',
+      description: book.description || '',
+      coverImage: book.coverImage || '',
+      imagesInput: Array.isArray(book.images) ? book.images.join(', ') : '',
+      tamilTitle: book.tamilTitle || '',
+      englishTitle: book.englishTitle || '',
+      sinhalaTitle: book.sinhalaTitle || '',
+      discount: book.discount !== undefined ? book.discount.toString() : '0',
+      stock: book.stock !== undefined ? book.stock.toString() : '10',
+      language: book.language || 'English',
+      publisher: book.publisher || '',
+      pages: book.pages !== undefined ? book.pages.toString() : '0',
+      publishYear: book.publishYear !== undefined ? book.publishYear.toString() : new Date().getFullYear().toString(),
+      isbn: book.isbn || '',
+      availabilityStatus: book.availabilityStatus || 'In Stock',
+      featured: book.featured === true,
+      bestSeller: book.bestSeller === true,
+      newArrival: book.newArrival === true,
+      status: book.status || 'active'
+    });
+    setShowModal(true);
+  };
+
+  // Save Book Form (Add/Update)
+  const handleSaveBook = async (e) => {
+    e.preventDefault();
+    const { title, author, price, category, description, coverImage } = formFields;
+    
+    if (!title.trim() || !author.trim() || !price || !category.trim() || !description.trim()) {
+      alert('Please fill out all required fields.');
+      return;
+    }
+
+    const payload = {
+      ...formFields,
+      price: Number(price),
+      discount: Number(formFields.discount),
+      stock: Number(formFields.stock),
+      pages: Number(formFields.pages),
+      publishYear: Number(formFields.publishYear),
+      images: formFields.imagesInput.split(',').map(s => s.trim()).filter(Boolean)
+    };
+    delete payload.imagesInput; // clean up form temporary field
+
+    try {
+      const url = isEditMode ? `${API_BASE_URL}/books/${editingId}` : `${API_BASE_URL}/books`;
+      const method = isEditMode ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        flashSuccess(isEditMode ? 'Book details updated successfully!' : 'New book added to catalog.');
+        setShowModal(false);
+        fetchBooks();
+      } else {
+        const errJson = await res.json();
+        alert(errJson.message || 'Failed to save book.');
+      }
+    } catch (err) {
+      alert('Network error. Failed to save book.');
+    }
+  };
+
+  // Handle Bulk Import
+  const handleBulkImport = async () => {
+    setImportError('');
+    if (!importJsonText.trim()) {
+      setImportError('Please enter a JSON list of books.');
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(importJsonText);
+      if (!Array.isArray(parsed)) {
+        setImportError('Payload must be a JSON array of book objects.');
+        return;
+      }
+
+      const res = await fetch(`${API_BASE_URL}/books/bulk-import`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ books: parsed })
+      });
+
+      const resJson = await res.json();
+      if (res.ok) {
+        flashSuccess(resJson.message);
+        setShowImportModal(false);
+        setImportJsonText('');
+        fetchBooks();
+      } else {
+        setImportError(resJson.message || 'Import failed.');
+      }
+    } catch (err) {
+      setImportError('Invalid JSON formatting. Check your brackets and quotes.');
+    }
+  };
+
+  // Filter Logic
+  const filteredBooks = books.filter(book => {
+    const matchesSearch = 
+      book.title.toLowerCase().includes(search.toLowerCase()) ||
+      book.author.toLowerCase().includes(search.toLowerCase()) ||
+      (book.isbn && book.isbn.includes(search));
+
+    const matchesCat = catFilter === 'All' || book.category === catFilter;
+    const matchesLang = langFilter === 'All' || book.language === langFilter;
+    
+    let matchesStatus = true;
+    if (statusFilter === 'active') matchesStatus = book.status !== 'archived';
+    else if (statusFilter === 'archived') matchesStatus = book.status === 'archived';
+
+    return matchesSearch && matchesCat && matchesLang && matchesStatus;
+  });
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredBooks.length / itemsPerPage);
+  const paginatedBooks = filteredBooks.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  return (
+    <div className="space-y-6">
+      
+      {/* Toast alert box */}
+      {successMsg && (
+        <div className="fixed top-20 right-6 z-50 p-4 rounded-2xl bg-emerald-500 border border-emerald-400 text-white font-bold text-xs shadow-2xl flex items-center gap-2 animate-bounce">
+          <Check className="h-4 w-4" />
+          <span>{successMsg}</span>
+        </div>
+      )}
+
+      {/* Title bar */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-100 font-display uppercase tracking-wide">
+            Book Catalog Manager
+          </h1>
+          <p className="text-xs text-slate-400">Create, update, archive, and import catalog books</p>
+        </div>
+        <div className="flex gap-2">
+          <button 
+            onClick={() => setShowImportModal(true)}
+            className="px-4 py-2.5 bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-bold flex items-center gap-2 transition-all"
+          >
+            <Upload className="h-4 w-4" />
+            <span>Bulk Import</span>
+          </button>
+          <button 
+            onClick={openCreateModal}
+            className="px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-brand-650/20 transition-all"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add New Book</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Filter Control Bar */}
+      <div className="bg-[#0f172a] border border-slate-850 p-4 rounded-3xl grid grid-cols-1 sm:grid-cols-4 gap-4 items-center">
+        
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
+          <input
+            type="text"
+            placeholder="Search title, author, ISBN..."
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+            className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+          />
+        </div>
+
+        {/* Category */}
+        <select
+          value={catFilter}
+          onChange={(e) => { setCatFilter(e.target.value); setCurrentPage(1); }}
+          className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-350 text-xs focus:outline-none"
+        >
+          <option value="All">All Categories</option>
+          {categories.map(c => (
+            <option key={c._id} value={c.name}>{c.name}</option>
+          ))}
+        </select>
+
+        {/* Language */}
+        <select
+          value={langFilter}
+          onChange={(e) => { setLangFilter(e.target.value); setCurrentPage(1); }}
+          className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-350 text-xs focus:outline-none"
+        >
+          <option value="All">All Languages</option>
+          <option value="English">English</option>
+          <option value="Tamil">Tamil</option>
+          <option value="Sinhala">Sinhala</option>
+        </select>
+
+        {/* Status */}
+        <select
+          value={statusFilter}
+          onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+          className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-350 text-xs focus:outline-none"
+        >
+          <option value="active">Active Books Only</option>
+          <option value="archived">Archived Books Only</option>
+          <option value="all">All (Active & Archived)</option>
+        </select>
+
+      </div>
+
+      {/* Main Books Catalog Table */}
+      <div className="bg-[#0f172a] border border-slate-850 rounded-3xl overflow-hidden shadow-2xl">
+        <div className="overflow-x-auto no-scrollbar">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="bg-slate-900/50 border-b border-slate-850 text-slate-500 font-bold uppercase tracking-wider">
+                <th className="p-4 w-12">Cover</th>
+                <th className="p-4">Book Details</th>
+                <th className="p-4">Language</th>
+                <th className="p-4">Category</th>
+                <th className="p-4 text-right">Price</th>
+                <th className="p-4 text-center">Stock</th>
+                <th className="p-4 text-center">Status</th>
+                <th className="p-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="8" className="p-12 text-center text-slate-500">Loading catalog items...</td>
+                </tr>
+              ) : paginatedBooks.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="p-12 text-center text-slate-500">No books match your filtering options.</td>
+                </tr>
+              ) : (
+                paginatedBooks.map((book) => (
+                  <tr key={book._id} className="border-b border-slate-850/40 hover:bg-slate-800/10 transition-colors">
+                    {/* Cover image */}
+                    <td className="p-4">
+                      <img 
+                        src={book.coverImage} 
+                        alt="" 
+                        className="h-10 w-8 object-cover rounded shadow-md"
+                        onError={(e) => e.target.src = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=600'}
+                      />
+                    </td>
+                    {/* Book title and author */}
+                    <td className="p-4">
+                      <div>
+                        <p className="font-bold text-slate-200 text-sm max-w-[240px] truncate">{book.title}</p>
+                        <p className="text-[10px] text-slate-500 truncate max-w-[200px]">by {book.author}</p>
+                        {book.isbn && <p className="text-[9px] text-brand-400">ISBN: {book.isbn}</p>}
+                      </div>
+                    </td>
+                    {/* Language */}
+                    <td className="p-4 font-medium text-slate-350">{book.language}</td>
+                    {/* Category */}
+                    <td className="p-4 text-slate-400">{book.category}</td>
+                    {/* Price and discount */}
+                    <td className="p-4 text-right font-bold text-slate-100">
+                      <div>
+                        {book.discount > 0 ? (
+                          <>
+                            <span className="text-[10px] line-through text-slate-500 mr-1.5">Rs.{book.price}</span>
+                            <span className="text-emerald-400">Rs.{(book.price - book.discount).toFixed(0)}</span>
+                          </>
+                        ) : (
+                          <span>Rs.{book.price}</span>
+                        )}
+                      </div>
+                    </td>
+                    {/* Stock level */}
+                    <td className="p-4 text-center">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
+                        book.stock === 0 
+                          ? 'bg-rose-500/10 text-rose-400' 
+                          : book.stock <= 5 
+                          ? 'bg-amber-500/10 text-amber-400 animate-pulse' 
+                          : 'bg-emerald-500/10 text-emerald-400'
+                      }`}>
+                        {book.stock}
+                      </span>
+                    </td>
+                    {/* Status Pill */}
+                    <td className="p-4 text-center">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
+                        book.status === 'archived'
+                          ? 'bg-slate-800 text-slate-500 border border-slate-750'
+                          : 'bg-emerald-600/10 text-emerald-400 border border-emerald-500/10'
+                      }`}>
+                        {book.status || 'active'}
+                      </span>
+                    </td>
+                    {/* Actions */}
+                    <td className="p-4 text-right space-x-1.5 shrink-0">
+                      <button 
+                        onClick={() => openEditModal(book)}
+                        title="Edit Book Details"
+                        className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-350 hover:text-slate-100 transition-colors"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </button>
+                      {book.status === 'archived' ? (
+                        <button 
+                          onClick={() => handleRestore(book._id)}
+                          title="Restore Book to Store"
+                          className="p-2 rounded-lg bg-emerald-950 hover:bg-emerald-900 text-emerald-450 hover:text-emerald-300 transition-colors"
+                        >
+                          <RotateCcw className="h-3.5 w-3.5" />
+                        </button>
+                      ) : (
+                        <button 
+                          onClick={() => handleArchive(book._id)}
+                          title="Archive Book"
+                          className="p-2 rounded-lg bg-amber-950 hover:bg-amber-900 text-amber-450 hover:text-amber-300 transition-colors"
+                        >
+                          <Archive className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => handleDelete(book._id)}
+                        title="Delete Permanently"
+                        className="p-2 rounded-lg bg-rose-950 hover:bg-rose-900/60 text-rose-450 hover:text-rose-300 transition-colors"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Table Footer Pagination */}
+        {totalPages > 1 && (
+          <div className="bg-slate-900/40 p-4 border-t border-slate-850 flex items-center justify-between">
+            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+              Showing page {currentPage} of {totalPages} ({filteredBooks.length} books found)
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-1.5 rounded-lg border border-slate-800 text-slate-400 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="h-4.5 w-4.5" />
+              </button>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="p-1.5 rounded-lg border border-slate-800 text-slate-400 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="h-4.5 w-4.5" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* CREATE & EDIT FORM OVERLAY MODAL */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-[#0f172a] border border-slate-800 w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden animate-scale-in my-8 max-h-[90vh] flex flex-col">
+            
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-slate-850 flex items-center justify-between shrink-0">
+              <h3 className="text-md font-bold font-display uppercase tracking-wider text-slate-200">
+                {isEditMode ? 'Modify Book Details' : 'Add New Book to Store'}
+              </h3>
+              <button 
+                onClick={() => setShowModal(false)}
+                className="p-1 rounded-lg hover:bg-slate-800 text-slate-450 hover:text-slate-200 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Form scroll viewport */}
+            <form onSubmit={handleSaveBook} className="p-6 space-y-6 overflow-y-auto flex-1 no-scrollbar text-xs">
+              
+              {/* Basic Details Section */}
+              <div className="space-y-4">
+                <h4 className="font-bold text-brand-400 uppercase tracking-widest text-[9px] border-b border-slate-850 pb-1">1. Basic Book Info</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  
+                  {/* Title (Display Name) */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400 uppercase tracking-wider">Book Display Title *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formFields.title}
+                      onChange={(e) => setFormFields(prev => ({ ...prev, title: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+                      placeholder="e.g. Madol Doova"
+                    />
+                  </div>
+
+                  {/* Author */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400 uppercase tracking-wider">Author *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formFields.author}
+                      onChange={(e) => setFormFields(prev => ({ ...prev, author: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+                      placeholder="e.g. Martin Wickramasinghe"
+                    />
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Translation Multi-Language Titles Section */}
+              <div className="space-y-4">
+                <h4 className="font-bold text-brand-400 uppercase tracking-widest text-[9px] border-b border-slate-850 pb-1">2. Translated Titles (Optional)</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Tamil */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400 uppercase tracking-wider">Tamil Title</label>
+                    <input
+                      type="text"
+                      value={formFields.tamilTitle}
+                      onChange={(e) => setFormFields(prev => ({ ...prev, tamilTitle: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
+                      placeholder="தமிழ் தலைப்பு"
+                    />
+                  </div>
+                  {/* English */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400 uppercase tracking-wider">English Title</label>
+                    <input
+                      type="text"
+                      value={formFields.englishTitle}
+                      onChange={(e) => setFormFields(prev => ({ ...prev, englishTitle: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
+                      placeholder="English Title"
+                    />
+                  </div>
+                  {/* Sinhala */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400 uppercase tracking-wider">Sinhala Title</label>
+                    <input
+                      type="text"
+                      value={formFields.sinhalaTitle}
+                      onChange={(e) => setFormFields(prev => ({ ...prev, sinhalaTitle: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
+                      placeholder="සිංහල මාතෘකාව"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Pricing, Discount, Stock, Language, Category */}
+              <div className="space-y-4">
+                <h4 className="font-bold text-brand-400 uppercase tracking-widest text-[9px] border-b border-slate-850 pb-1">3. Inventory & Pricing</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+                  
+                  {/* Category */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400 uppercase tracking-wider">Category</label>
+                    <select
+                      value={formFields.category}
+                      onChange={(e) => setFormFields(prev => ({ ...prev, category: e.target.value }))}
+                      className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-350 focus:outline-none"
+                    >
+                      {categories.map(c => (
+                        <option key={c._id} value={c.name}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Language */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400 uppercase tracking-wider">Language</label>
+                    <select
+                      value={formFields.language}
+                      onChange={(e) => setFormFields(prev => ({ ...prev, language: e.target.value }))}
+                      className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-350 focus:outline-none"
+                    >
+                      <option value="English">English</option>
+                      <option value="Tamil">Tamil</option>
+                      <option value="Sinhala">Sinhala</option>
+                    </select>
+                  </div>
+
+                  {/* Price */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400 uppercase tracking-wider">Price (LKR) *</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={formFields.price}
+                      onChange={(e) => setFormFields(prev => ({ ...prev, price: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
+                      placeholder="950"
+                    />
+                  </div>
+
+                  {/* Discount */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400 uppercase tracking-wider">Discount (LKR)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formFields.discount}
+                      onChange={(e) => setFormFields(prev => ({ ...prev, discount: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
+                      placeholder="100"
+                    />
+                  </div>
+
+                  {/* Stock */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400 uppercase tracking-wider">Stock Units</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formFields.stock}
+                      onChange={(e) => setFormFields(prev => ({ ...prev, stock: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
+                      placeholder="15"
+                    />
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Publisher, ISBN, Year, Pages */}
+              <div className="space-y-4">
+                <h4 className="font-bold text-brand-400 uppercase tracking-widest text-[9px] border-b border-slate-850 pb-1">4. Metadata & Publisher</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {/* Publisher */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400 uppercase tracking-wider">Publisher</label>
+                    <input
+                      type="text"
+                      value={formFields.publisher}
+                      onChange={(e) => setFormFields(prev => ({ ...prev, publisher: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
+                      placeholder="Sarasavi Publishers"
+                    />
+                  </div>
+                  {/* Pages */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400 uppercase tracking-wider">Pages</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formFields.pages}
+                      onChange={(e) => setFormFields(prev => ({ ...prev, pages: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
+                      placeholder="280"
+                    />
+                  </div>
+                  {/* Publish Year */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400 uppercase tracking-wider">Publish Year</label>
+                    <input
+                      type="number"
+                      min="1800"
+                      value={formFields.publishYear}
+                      onChange={(e) => setFormFields(prev => ({ ...prev, publishYear: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
+                    />
+                  </div>
+                  {/* ISBN */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400 uppercase tracking-wider">ISBN Number</label>
+                    <input
+                      type="text"
+                      value={formFields.isbn}
+                      onChange={(e) => setFormFields(prev => ({ ...prev, isbn: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
+                      placeholder="978-955-30-1234-5"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Cover Image & Image gallery list */}
+              <div className="space-y-4">
+                <h4 className="font-bold text-brand-400 uppercase tracking-widest text-[9px] border-b border-slate-850 pb-1">5. Images Gallery</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Primary Cover */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400 uppercase tracking-wider">Cover Image URL *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formFields.coverImage}
+                      onChange={(e) => setFormFields(prev => ({ ...prev, coverImage: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
+                    />
+                  </div>
+                  {/* Multiple Gallery */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400 uppercase tracking-wider">Additional Gallery Images (Comma-separated URLs)</label>
+                    <input
+                      type="text"
+                      value={formFields.imagesInput}
+                      onChange={(e) => setFormFields(prev => ({ ...prev, imagesInput: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
+                      placeholder="http://img1.jpg, http://img2.jpg"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="space-y-1">
+                <label className="font-bold text-slate-400 uppercase tracking-wider">Book Description *</label>
+                <textarea
+                  rows="4"
+                  required
+                  value={formFields.description}
+                  onChange={(e) => setFormFields(prev => ({ ...prev, description: e.target.value }))}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
+                  placeholder="Enter book summary or synopsis..."
+                />
+              </div>
+
+              {/* Flags / Switches */}
+              <div className="bg-slate-950/40 p-4 border border-slate-850 rounded-2xl flex flex-wrap gap-6 items-center">
+                
+                {/* Featured */}
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formFields.featured}
+                    onChange={(e) => setFormFields(prev => ({ ...prev, featured: e.target.checked }))}
+                    className="h-4 w-4 rounded bg-slate-950 border-slate-850 text-brand-500 focus:ring-0"
+                  />
+                  <span className="font-bold text-slate-350">Featured (Home Carousel)</span>
+                </label>
+
+                {/* Best Seller */}
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formFields.bestSeller}
+                    onChange={(e) => setFormFields(prev => ({ ...prev, bestSeller: e.target.checked }))}
+                    className="h-4 w-4 rounded bg-slate-950 border-slate-850 text-brand-500 focus:ring-0"
+                  />
+                  <span className="font-bold text-slate-350">Best Seller Tag</span>
+                </label>
+
+                {/* New Arrival */}
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formFields.newArrival}
+                    onChange={(e) => setFormFields(prev => ({ ...prev, newArrival: e.target.checked }))}
+                    className="h-4 w-4 rounded bg-slate-950 border-slate-850 text-brand-500 focus:ring-0"
+                  />
+                  <span className="font-bold text-slate-350">New Arrival Tag</span>
+                </label>
+
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-4 border-t border-slate-850 flex justify-end gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="px-5 py-2.5 rounded-xl border border-slate-800 text-slate-450 hover:text-slate-200 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold shadow-lg shadow-brand-600/10 transition-all active:scale-95"
+                >
+                  {isEditMode ? 'Update Catalog' : 'Publish Book'}
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* BULK IMPORT MODAL */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#0f172a] border border-slate-800 w-full max-w-xl rounded-3xl shadow-2xl p-6 space-y-4 animate-scale-in">
+            
+            <div className="flex items-center justify-between border-b border-slate-850 pb-3">
+              <h3 className="font-bold text-sm text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                <Upload className="h-4.5 w-4.5 text-brand-400" />
+                <span>Bulk Import Books Array</span>
+              </h3>
+              <button 
+                onClick={() => { setShowImportModal(false); setImportError(''); }}
+                className="p-1 rounded-lg hover:bg-slate-800 text-slate-450"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+            </div>
+
+            {importError && (
+              <div className="p-3.5 rounded-xl border border-rose-500/20 bg-rose-500/5 text-xs text-rose-350 font-semibold flex items-center gap-2">
+                <AlertCircle className="h-4.5 w-4.5 shrink-0" />
+                <span>{importError}</span>
+              </div>
+            )}
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Paste JSON Catalog Array</label>
+              <textarea
+                rows="8"
+                value={importJsonText}
+                onChange={(e) => setImportJsonText(e.target.value)}
+                placeholder='[\n  {\n    "title": "Example Book",\n    "author": "Example Author",\n    "price": 850,\n    "category": "Fiction",\n    "description": "Synopsis here"\n  }\n]'
+                className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-350 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-brand-500/50 no-scrollbar"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => { setShowImportModal(false); setImportError(''); }}
+                className="px-4 py-2 bg-slate-950 hover:bg-slate-900 border border-slate-800 rounded-xl text-slate-400 text-xs font-bold transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleBulkImport}
+                className="px-5 py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-bold transition-all"
+              >
+                Confirm Import
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}

@@ -15,6 +15,8 @@ import CategoryPage from './pages/CategoryPage';
 import SpecialListsPage from './pages/SpecialListsPage';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminPlaceholder from './pages/admin/AdminPlaceholder';
+import Dashboard from './pages/admin/Dashboard';
+import BookManagement from './pages/admin/BookManagement';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
@@ -46,8 +48,8 @@ function AppContent() {
       {/* Admin Portal Layout & Sub-Routes */}
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<Navigate to="/admin/dashboard" replace />} />
-        <Route path="dashboard" element={<AdminPlaceholder />} />
-        <Route path="dashboard/books" element={<AdminPlaceholder />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="dashboard/books" element={<BookManagement />} />
         <Route path="dashboard/inventory" element={<AdminPlaceholder />} />
         <Route path="dashboard/orders" element={<AdminPlaceholder />} />
         <Route path="dashboard/categories" element={<AdminPlaceholder />} />
