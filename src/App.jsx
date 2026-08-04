@@ -17,6 +17,8 @@ import AdminLogin from './pages/admin/AdminLogin';
 import AdminPlaceholder from './pages/admin/AdminPlaceholder';
 import Dashboard from './pages/admin/Dashboard';
 import BookManagement from './pages/admin/BookManagement';
+import Orders from './pages/admin/Orders';
+import Inventory from './pages/admin/Inventory';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
@@ -50,8 +52,8 @@ function AppContent() {
         <Route index element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="dashboard/books" element={<BookManagement />} />
-        <Route path="dashboard/inventory" element={<AdminPlaceholder />} />
-        <Route path="dashboard/orders" element={<AdminPlaceholder />} />
+        <Route path="dashboard/inventory" element={<Inventory />} />
+        <Route path="dashboard/orders" element={<Orders />} />
         <Route path="dashboard/categories" element={<AdminPlaceholder />} />
         <Route path="dashboard/authors" element={<AdminPlaceholder />} />
         <Route path="dashboard/publishers" element={<AdminPlaceholder />} />
