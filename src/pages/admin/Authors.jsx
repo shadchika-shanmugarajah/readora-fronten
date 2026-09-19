@@ -52,13 +52,28 @@ export default function Authors() {
     setTimeout(() => setSuccessMsg(''), 4000);
   };
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Image size exceeds 2MB limit.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormFields(prev => ({ ...prev, image: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const openCreateModal = () => {
     setIsEditMode(false);
     setEditingId(null);
     setFormFields({
       name: '',
       bio: '',
-      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
+      image: ''
     });
     setShowModal(true);
   };
@@ -273,15 +288,51 @@ export default function Authors() {
                 />
               </div>
 
-              {/* Avatar URL */}
-              <div className="space-y-1">
-                <label className="font-bold text-slate-400 uppercase">Profile Image URL</label>
+              {/* Profile Image (URL or PC Upload) */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="font-bold text-slate-400 uppercase">Profile Image (URL or PC Upload)</label>
+                  <span className="text-[10px] text-brand-400 font-bold uppercase">PC Upload Supported</span>
+                </div>
                 <input
                   type="text"
-                  value={formFields.image}
+                  placeholder="Paste Image URL or upload from PC below..."
+                  value={formFields.image?.startsWith('data:image') ? 'Uploaded from PC (Image File Attached)' : formFields.image}
                   onChange={(e) => setFormFields(prev => ({ ...prev, image: e.target.value }))}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
                 />
+                <div className="flex items-center justify-between gap-3 p-2 bg-slate-950/60 border border-slate-850 rounded-xl">
+                  <span className="text-[10px] text-slate-400 font-medium">Upload from PC:</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[9px] file:font-bold file:bg-slate-800 file:text-slate-200 hover:file:bg-slate-700 cursor-pointer"
+                  />
+                </div>
+                {formFields.image && (
+                  <div className="mt-2 p-2 bg-slate-900/30 rounded-xl border border-slate-850/60 flex items-center gap-3">
+                    <img 
+                      src={formFields.image} 
+                      alt="Avatar Preview" 
+                      className="h-12 w-12 object-cover rounded-full border border-slate-800 shadow-md"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80';
+                      }}
+                    />
+                    <div className="text-[10px]">
+                      <p className="font-bold text-slate-300">Avatar Preview</p>
+                      <button
+                        type="button"
+                        onClick={() => setFormFields(prev => ({ ...prev, image: '' }))}
+                        className="text-rose-400 hover:text-rose-300 font-semibold"
+                      >
+                        Remove Image
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Biography */}

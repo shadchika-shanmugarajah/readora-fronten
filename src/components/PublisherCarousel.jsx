@@ -4,45 +4,6 @@ import { ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
 import { API_BASE_URL } from '../config';
 import { slugify } from '../utils/slugify';
 
-const DEFAULT_PUBLISHERS = [
-  {
-    name: 'Vikatan Publications',
-    description: 'Pioneer of Tamil literature and magazines',
-    logo: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=300',
-    slug: 'vikatan-publications'
-  },
-  {
-    name: 'Vasagasalai Publications',
-    description: 'Modern Tamil fiction & poetry publisher',
-    logo: 'https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?auto=format&fit=crop&q=80&w=300',
-    slug: 'vasagasalai-publications'
-  },
-  {
-    name: 'Kizhakku Pathippagam',
-    description: 'Renowned non-fiction and historical books',
-    logo: 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&q=80&w=300',
-    slug: 'kizhakku-pathippagam'
-  },
-  {
-    name: 'Sarasavi Publishers',
-    description: 'Leading publisher in Sri Lanka',
-    logo: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=300',
-    slug: 'sarasavi-publishers'
-  },
-  {
-    name: 'Godage International Publishers',
-    description: 'Cultural, academic and literary works',
-    logo: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&q=80&w=300',
-    slug: 'godage-international-publishers'
-  },
-  {
-    name: 'Penguin Random House',
-    description: 'Global trade book publisher',
-    logo: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&q=80&w=300',
-    slug: 'penguin-random-house'
-  }
-];
-
 export default function PublisherCarousel() {
   const [publishers, setPublishers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,23 +15,12 @@ export default function PublisherCarousel() {
         const res = await fetch(`${API_BASE_URL}/publishers`);
         if (res.ok) {
           const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            const combined = [...data];
-            DEFAULT_PUBLISHERS.forEach(def => {
-              if (!combined.some(p => p.name.toLowerCase() === def.name.toLowerCase())) {
-                combined.push(def);
-              }
-            });
-            setPublishers(combined);
-          } else {
-            setPublishers(DEFAULT_PUBLISHERS);
+          if (Array.isArray(data)) {
+            setPublishers(data);
           }
-        } else {
-          setPublishers(DEFAULT_PUBLISHERS);
         }
       } catch (err) {
-        console.warn('Failed to load publishers, using defaults', err);
-        setPublishers(DEFAULT_PUBLISHERS);
+        console.warn('Failed to load publishers', err);
       } finally {
         setLoading(false);
       }
@@ -86,6 +36,11 @@ export default function PublisherCarousel() {
     }
   };
 
+  // If not loading and no publishers exist in database, do not render empty section
+  if (!loading && publishers.length === 0) {
+    return null;
+  }
+
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Section Header with Left / Right arrows */}
@@ -100,22 +55,24 @@ export default function PublisherCarousel() {
         </div>
 
         {/* Scroll Arrow Buttons */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => scroll('left')}
-            className="p-2.5 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 text-slate-300 hover:text-white transition-all shadow-md active:scale-95"
-            aria-label="Previous publishers"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <button
-            onClick={() => scroll('right')}
-            className="p-2.5 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 text-slate-300 hover:text-white transition-all shadow-md active:scale-95"
-            aria-label="Next publishers"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
-        </div>
+        {publishers.length > 3 && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => scroll('left')}
+              className="p-2.5 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 text-slate-300 hover:text-white transition-all shadow-md active:scale-95"
+              aria-label="Previous publishers"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => scroll('right')}
+              className="p-2.5 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 text-slate-300 hover:text-white transition-all shadow-md active:scale-95"
+              aria-label="Next publishers"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Horizontal Scrollable Publishers Container */}
@@ -125,7 +82,7 @@ export default function PublisherCarousel() {
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {loading ? (
-          [...Array(6)].map((_, i) => (
+          [...Array(4)].map((_, i) => (
             <div key={i} className="flex flex-col items-center shrink-0 w-28 sm:w-36 space-y-3">
               <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-800 animate-pulse" />
               <div className="w-20 h-3 bg-slate-800 rounded animate-pulse" />

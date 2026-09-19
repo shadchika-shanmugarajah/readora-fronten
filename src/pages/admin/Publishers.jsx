@@ -52,13 +52,28 @@ export default function Publishers() {
     setTimeout(() => setSuccessMsg(''), 4000);
   };
 
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Image size exceeds 2MB limit.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormFields(prev => ({ ...prev, logo: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const openCreateModal = () => {
     setIsEditMode(false);
     setEditingId(null);
     setFormFields({
       name: '',
       description: '',
-      logo: 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=200'
+      logo: ''
     });
     setShowModal(true);
   };
@@ -273,15 +288,51 @@ export default function Publishers() {
                 />
               </div>
 
-              {/* Logo URL */}
-              <div className="space-y-1">
-                <label className="font-bold text-slate-400 uppercase">Logo Image URL</label>
+              {/* Logo (URL or PC Upload) */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="font-bold text-slate-400 uppercase">Logo Image (URL or PC Upload)</label>
+                  <span className="text-[10px] text-purple-400 font-bold uppercase">PC Upload Supported</span>
+                </div>
                 <input
                   type="text"
-                  value={formFields.logo}
+                  placeholder="Paste Logo URL or upload from PC below..."
+                  value={formFields.logo?.startsWith('data:image') ? 'Uploaded from PC (Image File Attached)' : formFields.logo}
                   onChange={(e) => setFormFields(prev => ({ ...prev, logo: e.target.value }))}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
                 />
+                <div className="flex items-center justify-between gap-3 p-2 bg-slate-950/60 border border-slate-850 rounded-xl">
+                  <span className="text-[10px] text-slate-400 font-medium">Upload from PC:</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    className="text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[9px] file:font-bold file:bg-slate-800 file:text-slate-200 hover:file:bg-slate-700 cursor-pointer"
+                  />
+                </div>
+                {formFields.logo && (
+                  <div className="mt-2 p-2 bg-slate-900/30 rounded-xl border border-slate-850/60 flex items-center gap-3">
+                    <img 
+                      src={formFields.logo} 
+                      alt="Logo Preview" 
+                      className="h-10 w-16 object-contain rounded bg-slate-950 p-1 border border-slate-800 shadow-md"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=200';
+                      }}
+                    />
+                    <div className="text-[10px]">
+                      <p className="font-bold text-slate-300">Logo Preview</p>
+                      <button
+                        type="button"
+                        onClick={() => setFormFields(prev => ({ ...prev, logo: '' }))}
+                        className="text-rose-400 hover:text-rose-300 font-semibold"
+                      >
+                        Remove Logo
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Description */}

@@ -5,29 +5,6 @@ import BookCard from '../components/BookCard';
 import SEO from '../components/SEO';
 import { API_BASE_URL } from '../config';
 
-const PUBLISHER_DETAILS = {
-  'vikatan-publications': {
-    name: 'Vikatan Publications',
-    desc: 'Vikatan Publications is one of the most prominent Tamil book publishers, division of the legendary Vikatan Media Group. Established in Chennai, India, it is highly regarded for printing classical novels, historical fiction, contemporary essays, and poetry from elite Tamil writers.',
-    image: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600'
-  },
-  'vasagasalai-publications': {
-    name: 'வாசகசாலை பதிப்பகம் (Vasagasalai Publications)',
-    desc: 'Vasagasalai Publications is a prominent independent publisher focusing on modern Tamil literature, poetry collections (Kavi), and translations. It serves as a creative hub for new age writers and classical literature enthusiasts.',
-    image: 'https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?auto=format&fit=crop&q=80&w=600'
-  },
-  'kizhakku-pathippagam': {
-    name: 'Kizhakku Pathippagam',
-    desc: 'Kizhakku Pathippagam is an influential publishing house recognized for bringing out high-quality translations, history books, political analyses, and non-fiction works in Tamil.',
-    image: 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&q=80&w=600'
-  },
-  'sarasavi-publishers': {
-    name: 'Sarasavi Publishers',
-    desc: 'Sarasavi Publishers is one of the largest and most prestigious publishing houses in Sri Lanka, offering a wide array of educational, literary, fiction, and translated titles.',
-    image: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=600'
-  }
-};
-
 export default function PublisherPage() {
   const { slug } = useParams();
   const [publisher, setPublisher] = useState(null);
@@ -38,7 +15,7 @@ export default function PublisherPage() {
     const fetchPublisherData = async () => {
       setLoading(true);
       try {
-        // Fetch publisher profile
+        // Fetch publisher profile from database
         let fetchedPublisher = null;
         try {
           const pubRes = await fetch(`${API_BASE_URL}/publishers/${slug}`);
@@ -56,17 +33,14 @@ export default function PublisherPage() {
           fetchedBooks = await booksRes.json();
         }
 
-        // Determine publisher info with fallbacks
-        const pubKey = slug ? slug.toLowerCase().trim() : '';
-        const fallback = PUBLISHER_DETAILS[pubKey] || {};
-        const inferredName = fetchedBooks.length > 0 
+        const inferredName = fetchedPublisher?.name || (fetchedBooks.length > 0 
           ? fetchedBooks[0].publisher 
-          : slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+          : slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '));
 
         const finalPublisher = {
-          name: fetchedPublisher?.name || fallback.name || inferredName,
-          desc: fetchedPublisher?.description || fallback.desc || `Browse the extensive collection of books and novels published by ${inferredName}, available online for quick delivery in Sri Lanka at Readora.lk.`,
-          image: fetchedPublisher?.logo || fallback.image || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=600'
+          name: inferredName,
+          desc: fetchedPublisher?.description || `Browse publications and books published by ${inferredName} on Readora.lk.`,
+          image: fetchedPublisher?.logo || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=200'
         };
 
         setPublisher(finalPublisher);
@@ -137,7 +111,7 @@ export default function PublisherPage() {
               {displayName}
             </h1>
           </div>
-          <p className="text-slate-400 leading-relaxed text-sm sm:text-base">
+          <p className="text-slate-400 leading-relaxed text-sm sm:text-base whitespace-pre-line">
             {publisher?.desc}
           </p>
         </div>

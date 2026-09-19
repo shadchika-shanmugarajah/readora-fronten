@@ -5,27 +5,6 @@ import BookCard from '../components/BookCard';
 import SEO from '../components/SEO';
 import { API_BASE_URL } from '../config';
 
-const AUTHOR_BIOS = {
-  'kalki-krishnamurthy': {
-    name: 'Kalki Krishnamurthy',
-    role: 'Legendary Tamil Novelist & Journalist',
-    bio: 'Ramaswamy Krishnamurthy (9 September 1899 – 5 December 1954), better known by his pen name Kalki, was a pioneering Tamil writer, journalist, poet, critic, and Indian independence activist. He is widely acclaimed for his monumental historical fiction novels, including Ponniyin Selvan and Sivagamiyin Sabatham, which continue to capture the imagination of readers worldwide.',
-    image: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600'
-  },
-  'martin-wickramasinghe': {
-    name: 'Martin Wickramasinghe',
-    role: 'Father of Modern Sinhala Literature',
-    bio: 'Martin Wickramasinghe (29 May 1890 – 23 July 1976) was a highly respected Sri Lankan novelist and search scholar. Known as the father of modern Sinhala literature, his writings explored the life of Sri Lankan villagers, cultural transitions, and social developments. His famous works include Madol Doova and Gamperaliya.',
-    image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=600'
-  },
-  'james-clear': {
-    name: 'James Clear',
-    role: 'Best-selling Author & Productivity Expert',
-    bio: 'James Clear is an American author, speaker, and productivity expert. He is best known for his #1 New York Times bestseller Atomic Habits, which has sold over 15 million copies worldwide. Clear focuses on habits, decision-making, and continuous improvement, offering practical strategies to help individuals build positive behaviors and break negative ones.',
-    image: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=600'
-  }
-};
-
 export default function AuthorPage() {
   const { slug } = useParams();
   const [author, setAuthor] = useState(null);
@@ -36,7 +15,7 @@ export default function AuthorPage() {
     const fetchAuthorData = async () => {
       setLoading(true);
       try {
-        // Fetch author profile
+        // Fetch author profile from database
         let fetchedAuthor = null;
         try {
           const authorRes = await fetch(`${API_BASE_URL}/authors/${slug}`);
@@ -54,18 +33,14 @@ export default function AuthorPage() {
           fetchedBooks = await booksRes.json();
         }
 
-        // Determine author info with fallbacks
-        const authorKey = slug ? slug.toLowerCase().trim() : '';
-        const fallback = AUTHOR_BIOS[authorKey] || {};
-        const inferredName = fetchedBooks.length > 0 
+        const inferredName = fetchedAuthor?.name || (fetchedBooks.length > 0 
           ? fetchedBooks[0].author 
-          : slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+          : slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '));
 
         const finalAuthor = {
-          name: fetchedAuthor?.name || fallback.name || inferredName,
-          role: fallback.role || 'Distinguished Author',
-          bio: fetchedAuthor?.bio || fallback.bio || `Discover literature and titles written by ${inferredName}, available for fast online ordering and island-wide delivery across Sri Lanka from Readora.lk.`,
-          image: fetchedAuthor?.image || fallback.image || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
+          name: inferredName,
+          bio: fetchedAuthor?.bio || `Discover books and literature written by ${inferredName} on Readora.lk.`,
+          image: fetchedAuthor?.image || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
         };
 
         setAuthor(finalAuthor);
@@ -130,13 +105,13 @@ export default function AuthorPage() {
         <div className="md:col-span-9 space-y-4 text-center md:text-left">
           <div>
             <span className="px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-wider bg-brand-600/20 text-brand-400 border border-brand-500/30">
-              {author?.role || 'Author'}
+              Author
             </span>
             <h1 className="text-3xl sm:text-5xl font-bold font-display tracking-tight text-slate-100 light:text-slate-900 mt-2">
               {displayName}
             </h1>
           </div>
-          <p className="text-slate-400 leading-relaxed text-sm sm:text-base">
+          <p className="text-slate-400 leading-relaxed text-sm sm:text-base whitespace-pre-line">
             {author?.bio}
           </p>
         </div>
