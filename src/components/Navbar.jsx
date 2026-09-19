@@ -146,6 +146,7 @@ export default function Navbar() {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Books', path: '/books' },
+    { name: 'Special Offers 🔥', path: '/offers' },
     { name: 'Wishlist', path: '/books?wishlist=true' },
     { name: 'About Us', path: '/about' },
   ];
@@ -287,6 +288,13 @@ export default function Navbar() {
               Books
             </Link>
             <Link 
+              to="/offers" 
+              className={`transition-colors duration-200 flex items-center gap-1.5 ${isActive('/offers') ? 'text-amber-400 font-bold' : 'text-amber-400/90 hover:text-amber-300 font-semibold'}`}
+            >
+              <span>Offers</span>
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">Deals</span>
+            </Link>
+            <Link 
               to="/about" 
               className={`transition-colors duration-200 ${isActive('/about') ? 'text-brand-400' : 'text-slate-300 hover:text-white light:text-slate-200 light:hover:text-white'}`}
             >
@@ -411,6 +419,13 @@ export default function Navbar() {
       <div className="border-t border-b border-white/5 bg-[#002738] py-3 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-start gap-2 sm:gap-4 overflow-x-auto no-scrollbar py-1">
+            <Link
+              to="/offers"
+              className="text-xs sm:text-sm font-extrabold tracking-wide text-amber-400 hover:text-amber-300 transition-colors shrink-0 px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center gap-1 shadow-sm"
+            >
+              <span>🔥 Special Offers</span>
+            </Link>
+            <span className="text-slate-700 select-none px-1">|</span>
             {categories.map((cat, idx) => (
               <React.Fragment key={cat.name}>
                 {idx > 0 && (

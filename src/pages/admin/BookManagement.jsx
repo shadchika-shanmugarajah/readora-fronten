@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Plus, Search, Edit2, Archive, RotateCcw, Trash2, 
-  Upload, Download, AlertCircle, Check, X, Filter, ChevronLeft, ChevronRight
+  Upload, Download, AlertCircle, Check, X, Filter, ChevronLeft, ChevronRight, Tag, Percent
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../config';
@@ -40,6 +40,9 @@ export default function BookManagement() {
     englishTitle: '',
     sinhalaTitle: '',
     discount: '0',
+    discountPercent: '0',
+    finalPrice: '',
+    isOffer: false,
     stock: '10',
     language: 'English',
     publisher: '',
@@ -181,6 +184,9 @@ export default function BookManagement() {
       englishTitle: '',
       sinhalaTitle: '',
       discount: '0',
+      discountPercent: '0',
+      finalPrice: '',
+      isOffer: false,
       stock: '10',
       language: 'English',
       publisher: '',
@@ -200,6 +206,14 @@ export default function BookManagement() {
   const openEditModal = (book) => {
     setIsEditMode(true);
     setEditingId(book._id);
+    const p = book.price !== undefined ? Number(book.price) : 0;
+    const d = book.discount !== undefined ? Number(book.discount) : 0;
+    let dp = book.discountPercent !== undefined ? Number(book.discountPercent) : 0;
+    if (!dp && p > 0 && d > 0) {
+      dp = Math.round((d / p) * 100);
+    }
+    const fp = p > 0 ? (d > 0 ? Math.max(0, p - d) : (dp > 0 ? Math.round(p * (1 - dp / 100)) : p)) : '';
+
     setFormFields({
       title: book.title || '',
       author: book.author || '',
@@ -211,7 +225,10 @@ export default function BookManagement() {
       tamilTitle: book.tamilTitle || '',
       englishTitle: book.englishTitle || '',
       sinhalaTitle: book.sinhalaTitle || '',
-      discount: book.discount !== undefined ? book.discount.toString() : '0',
+      discount: d.toString(),
+      discountPercent: dp.toString(),
+      finalPrice: fp.toString(),
+      isOffer: book.isOffer || d > 0 || dp > 0 || book.category === 'Offers' || false,
       stock: book.stock !== undefined ? book.stock.toString() : '10',
       language: book.language || 'English',
       publisher: book.publisher || '',
@@ -225,6 +242,85 @@ export default function BookManagement() {
       status: book.status || 'active'
     });
     setShowModal(true);
+  };
+
+  // 2-Way Pricing & Discount Auto-Calculation
+  const handlePriceChange = (val) => {
+    const p = parseFloat(val) || 0;
+    const dp = parseFloat(formFields.discountPercent) || 0;
+    let d = 0;
+    let fp = p;
+    if (dp > 0 && p > 0) {
+      d = Math.round(p * (dp / 100) * 100) / 100;
+      fp = Math.max(0, Math.round((p - d) * 100) / 100);
+    } else {
+      const currentD = parseFloat(formFields.discount) || 0;
+      if (currentD > 0 && p > 0) {
+        d = currentD;
+        fp = Math.max(0, Math.round((p - d) * 100) / 100);
+      }
+    }
+    setFormFields(prev => ({
+      ...prev,
+      price: val,
+      discount: d > 0 ? d.toString() : '0',
+      finalPrice: fp > 0 ? fp.toString() : '',
+      isOffer: dp > 0 || d > 0 ? true : prev.isOffer
+    }));
+  };
+
+  const handleDiscountPercentChange = (val) => {
+    const dp = parseFloat(val) || 0;
+    const p = parseFloat(formFields.price) || 0;
+    let d = 0;
+    let fp = p;
+    if (p > 0 && dp > 0) {
+      d = Math.round(p * (dp / 100) * 100) / 100;
+      fp = Math.max(0, Math.round((p - d) * 100) / 100);
+    }
+    setFormFields(prev => ({
+      ...prev,
+      discountPercent: val,
+      discount: d.toString(),
+      finalPrice: fp > 0 ? fp.toString() : '',
+      isOffer: dp > 0 ? true : prev.isOffer
+    }));
+  };
+
+  const handleDiscountAmountChange = (val) => {
+    const d = parseFloat(val) || 0;
+    const p = parseFloat(formFields.price) || 0;
+    let dp = 0;
+    let fp = p;
+    if (p > 0 && d > 0) {
+      dp = Math.round((d / p) * 100);
+      fp = Math.max(0, Math.round((p - d) * 100) / 100);
+    }
+    setFormFields(prev => ({
+      ...prev,
+      discount: val,
+      discountPercent: dp.toString(),
+      finalPrice: fp > 0 ? fp.toString() : '',
+      isOffer: d > 0 ? true : prev.isOffer
+    }));
+  };
+
+  const handleFinalPriceChange = (val) => {
+    const fp = parseFloat(val) || 0;
+    const p = parseFloat(formFields.price) || 0;
+    let d = 0;
+    let dp = 0;
+    if (p > 0 && fp >= 0 && fp < p) {
+      d = Math.round((p - fp) * 100) / 100;
+      dp = Math.round((d / p) * 100);
+    }
+    setFormFields(prev => ({
+      ...prev,
+      finalPrice: val,
+      discount: d.toString(),
+      discountPercent: dp.toString(),
+      isOffer: d > 0 ? true : prev.isOffer
+    }));
   };
 
   const handleCoverUpload = (e) => {
@@ -256,16 +352,27 @@ export default function BookManagement() {
       return;
     }
 
+    const numPrice = Number(price);
+    const numDiscount = Number(formFields.discount || 0);
+    let numDiscountPercent = Number(formFields.discountPercent || 0);
+    if (!numDiscountPercent && numPrice > 0 && numDiscount > 0) {
+      numDiscountPercent = Math.round((numDiscount / numPrice) * 100);
+    }
+    const boolIsOffer = formFields.isOffer === true || numDiscount > 0 || numDiscountPercent > 0 || formFields.category === 'Offers';
+
     const payload = {
       ...formFields,
-      price: Number(price),
-      discount: Number(formFields.discount),
+      price: numPrice,
+      discount: numDiscount,
+      discountPercent: numDiscountPercent,
+      isOffer: boolIsOffer,
       stock: Number(formFields.stock),
       pages: Number(formFields.pages),
       publishYear: Number(formFields.publishYear),
       images: formFields.imagesInput.split(',').map(s => s.trim()).filter(Boolean)
     };
-    delete payload.imagesInput; // clean up form temporary field
+    delete payload.imagesInput;
+    delete payload.finalPrice;
 
     try {
       const url = isEditMode ? `${API_BASE_URL}/books/${editingId}` : `${API_BASE_URL}/books`;
@@ -338,7 +445,12 @@ export default function BookManagement() {
       book.author.toLowerCase().includes(search.toLowerCase()) ||
       (book.isbn && book.isbn.includes(search));
 
-    const matchesCat = catFilter === 'All' || book.category === catFilter;
+    const matchesCat = catFilter === 'All' 
+      ? true 
+      : catFilter === 'Offers' 
+      ? (Number(book.discount) > 0 || Number(book.discountPercent) > 0 || book.isOffer === true || (book.category && (book.category.toLowerCase() === 'offers' || book.category.toLowerCase() === 'special offers')))
+      : book.category === catFilter;
+
     const matchesLang = langFilter === 'All' || book.language === langFilter;
     
     let matchesStatus = true;
@@ -414,6 +526,7 @@ export default function BookManagement() {
           className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-350 text-xs focus:outline-none"
         >
           <option value="All">All Categories</option>
+          <option value="Offers">Special Offers & Deals 🔥</option>
           {categories.map(c => (
             <option key={c._id} value={c.name}>{c.name}</option>
           ))}
@@ -496,11 +609,16 @@ export default function BookManagement() {
                     {/* Price and discount */}
                     <td className="p-4 text-right font-bold text-slate-100">
                       <div>
-                        {book.discount > 0 ? (
-                          <>
-                            <span className="text-[10px] line-through text-slate-500 mr-1.5">Rs.{book.price}</span>
-                            <span className="text-emerald-400">Rs.{(book.price - book.discount).toFixed(0)}</span>
-                          </>
+                        {Number(book.discount) > 0 || Number(book.discountPercent) > 0 ? (
+                          <div className="flex flex-col items-end">
+                            <span className="text-[10px] line-through text-slate-500">Rs.{book.price}</span>
+                            <span className="text-emerald-400 font-extrabold">
+                              Rs.{(book.price - (Number(book.discount) || (book.price * Number(book.discountPercent || 0) / 100))).toFixed(0)}
+                            </span>
+                            <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 mt-0.5">
+                              {book.discountPercent || (book.price > 0 ? Math.round((book.discount / book.price) * 100) : 0)}% OFF
+                            </span>
+                          </div>
                         ) : (
                           <span>Rs.{book.price}</span>
                         )}
@@ -693,16 +811,17 @@ export default function BookManagement() {
               {/* Pricing, Discount, Stock, Language, Category */}
               <div className="space-y-4">
                 <h4 className="font-bold text-brand-400 uppercase tracking-widest text-[9px] border-b border-slate-850 pb-1">3. Inventory & Pricing</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
-                  
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {/* Category */}
                   <div className="space-y-1">
-                    <label className="font-bold text-slate-400 uppercase tracking-wider">Category</label>
+                    <label className="font-bold text-slate-400 uppercase tracking-wider">Category *</label>
                     <select
                       value={formFields.category}
                       onChange={(e) => setFormFields(prev => ({ ...prev, category: e.target.value }))}
                       className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-350 focus:outline-none"
                     >
+                      <option value="Offers">Special Offers & Deals 🔥</option>
                       {categories.map(c => (
                         <option key={c._id} value={c.name}>{c.name}</option>
                       ))}
@@ -723,33 +842,6 @@ export default function BookManagement() {
                     </select>
                   </div>
 
-                  {/* Price */}
-                  <div className="space-y-1">
-                    <label className="font-bold text-slate-400 uppercase tracking-wider">Price (LKR) *</label>
-                    <input
-                      type="number"
-                      required
-                      min="0"
-                      value={formFields.price}
-                      onChange={(e) => setFormFields(prev => ({ ...prev, price: e.target.value }))}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
-                      placeholder="950"
-                    />
-                  </div>
-
-                  {/* Discount */}
-                  <div className="space-y-1">
-                    <label className="font-bold text-slate-400 uppercase tracking-wider">Discount (LKR)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={formFields.discount}
-                      onChange={(e) => setFormFields(prev => ({ ...prev, discount: e.target.value }))}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
-                      placeholder="100"
-                    />
-                  </div>
-
                   {/* Stock */}
                   <div className="space-y-1">
                     <label className="font-bold text-slate-400 uppercase tracking-wider">Stock Units</label>
@@ -762,7 +854,104 @@ export default function BookManagement() {
                       placeholder="15"
                     />
                   </div>
+                </div>
 
+                {/* Modern Pricing & Discount Auto-Calculator */}
+                <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <Tag className="h-4 w-4" />
+                      <span>Pricing & Discount Calculator</span>
+                    </label>
+                    {parseFloat(formFields.discount) > 0 && (
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                        {formFields.discountPercent}% OFF • Save Rs. {formFields.discount}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {/* Actual Price */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-300 uppercase">Actual Price (LKR) *</label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        step="any"
+                        value={formFields.price}
+                        onChange={(e) => handlePriceChange(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-brand-500"
+                        placeholder="e.g. 3450"
+                      />
+                    </div>
+
+                    {/* Discount Percentage */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-300 uppercase">Discount (%)</label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="any"
+                          value={formFields.discountPercent}
+                          onChange={(e) => handleDiscountPercentChange(e.target.value)}
+                          className="w-full px-3.5 py-2.5 pr-8 rounded-xl bg-slate-950 border border-slate-800 text-amber-300 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          placeholder="e.g. 15"
+                        />
+                        <span className="absolute right-3.5 top-2.5 text-slate-500 text-sm font-bold">%</span>
+                      </div>
+                    </div>
+
+                    {/* Discount Amount */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-300 uppercase">Discount (LKR)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={formFields.discount}
+                        onChange={(e) => handleDiscountAmountChange(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-brand-500"
+                        placeholder="e.g. 511"
+                      />
+                    </div>
+
+                    {/* After Discount Price */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-emerald-400 uppercase">After Discount (LKR)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={formFields.finalPrice}
+                        onChange={(e) => handleFinalPriceChange(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-emerald-500/40 text-emerald-300 font-bold text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        placeholder="e.g. 2939"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Special Offers Inclusion Option */}
+                  <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-t border-slate-800/60">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={formFields.isOffer}
+                        onChange={(e) => setFormFields(prev => ({ ...prev, isOffer: e.target.checked }))}
+                        className="w-4 h-4 rounded bg-slate-950 border-slate-700 text-amber-500 focus:ring-0 cursor-pointer"
+                      />
+                      <span className="text-xs font-semibold text-slate-300">
+                        Include in <span className="text-amber-400 font-bold">Special Offers</span> Catalog (book appears in both its category and Offers)
+                      </span>
+                    </label>
+                    {parseFloat(formFields.price) > 0 && (
+                      <span className="text-[11px] text-slate-400">
+                        Customer pays: <strong className="text-emerald-400 font-display font-bold">Rs. {formFields.finalPrice || formFields.price}</strong>
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 

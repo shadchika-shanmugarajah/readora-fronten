@@ -6,7 +6,10 @@ import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
 
 export default function Cart() {
-  const { cartItems, updateQuantity, removeFromCart, cartTotal, clearCart, showToast } = useCart();
+  const { 
+    cartItems, updateQuantity, removeFromCart, cartTotal, 
+    cartOriginalTotal, cartDiscountSavings, clearCart, showToast 
+  } = useCart();
   const { user, token, updateProfile } = useAuth();
   const navigate = useNavigate();
 
@@ -207,8 +210,20 @@ Please confirm my order.`;
                 <p className="text-xs text-slate-400 truncate light:text-slate-500">
                   by {item.author}
                 </p>
-                <div className="text-sm font-bold text-slate-200 light:text-slate-900 mt-1 font-display">
-                  {item.price.toLocaleString()} LKR
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-sm font-bold text-slate-200 light:text-slate-900 font-display">
+                    {item.price.toLocaleString()} LKR
+                  </span>
+                  {item.originalPrice && item.originalPrice > item.price && (
+                    <span className="text-xs text-slate-400 line-through">
+                      {item.originalPrice.toLocaleString()} LKR
+                    </span>
+                  )}
+                  {item.discountPercent > 0 && (
+                    <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">
+                      {item.discountPercent}% OFF
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -312,16 +327,26 @@ Please confirm my order.`;
               {/* Pricing breakdown */}
               <div className="space-y-3 pt-4 border-t border-white/5 text-sm">
                 <div className="flex justify-between text-slate-400 light:text-slate-600">
-                  <span>Subtotal</span>
-                  <span>{cartTotal.toLocaleString()} LKR</span>
+                  <span>Regular Subtotal</span>
+                  <span className={cartDiscountSavings > 0 ? "line-through text-slate-500" : ""}>
+                    {(cartOriginalTotal || cartTotal).toLocaleString()} LKR
+                  </span>
                 </div>
+                {cartDiscountSavings > 0 && (
+                  <div className="flex justify-between text-amber-400 font-semibold">
+                    <span>Special Offers Savings</span>
+                    <span>-{cartDiscountSavings.toLocaleString()} LKR</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center text-slate-400 light:text-slate-600">
                   <span>Delivery Charge</span>
                   <span className="text-amber-400 font-semibold text-xs light:text-amber-600">Calculated on confirmation</span>
                 </div>
-                <div className="flex justify-between text-base font-bold text-slate-100 light:text-slate-900 border-t border-white/5 pt-3">
+                <div className="flex justify-between items-center text-base font-bold text-slate-100 light:text-slate-900 border-t border-white/5 pt-3">
                   <span>Total Amount</span>
-                  <span className="font-display">{cartTotal.toLocaleString()} LKR</span>
+                  <span className="text-xl text-[#38bdf8] font-display">
+                    {cartTotal.toLocaleString()} LKR
+                  </span>
                 </div>
               </div>
 

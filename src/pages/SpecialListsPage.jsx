@@ -7,12 +7,12 @@ import { API_BASE_URL } from '../config';
 
 const PAGE_CONFIGS = {
   'offers': {
-    title: 'Special Deals & Offers',
+    title: 'SPECIAL OFFERS',
     badge: 'Special Deals',
     icon: <Tag className="h-4.5 w-4.5 text-amber-400" />,
-    tagline: 'Get exclusive discounts and excellent value on premium books in Sri Lanka.',
-    metaDesc: 'Explore active special offers and discounted books on Readora.lk. Fast shipping and payment on delivery across Sri Lanka.',
-    seoTitle: 'Special Book Deals & Offers'
+    tagline: 'Exclusive discounts and unbeatable deals on premium books in Sri Lanka.',
+    metaDesc: 'Explore active special offers and discounted books on Readora.lk. Fast shipping and cash on delivery across Sri Lanka.',
+    seoTitle: 'Special Offers & Book Discounts'
   },
   'new-releases': {
     title: 'New Arrivals & Releases',
@@ -35,6 +35,7 @@ const PAGE_CONFIGS = {
 export default function SpecialListsPage({ type }) {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [itemsLimit, setItemsLimit] = useState(50);
 
   const config = PAGE_CONFIGS[type] || PAGE_CONFIGS['new-releases'];
 
@@ -42,23 +43,32 @@ export default function SpecialListsPage({ type }) {
     const fetchBooks = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${API_BASE_URL}/books`);
+        const url = type === 'offers' ? `${API_BASE_URL}/books?offers=true` : `${API_BASE_URL}/books`;
+        const res = await fetch(url);
         if (res.ok) {
           let data = await res.json();
           
           // Sort or filter based on list type
           if (type === 'offers') {
-            // Mocking offers by choosing higher rating books or featured books
-            data = data.filter(b => b.rating >= 4.7);
+            data = data.filter(b => 
+              (b.discount && Number(b.discount) > 0) || 
+              (b.discountPercent && Number(b.discountPercent) > 0) || 
+              b.isOffer === true || 
+              (b.category && (b.category.toLowerCase() === 'offers' || b.category.toLowerCase() === 'special offers'))
+            );
+            // Sort by highest discount
+            data.sort((a, b) => {
+              const discA = Number(a.discountPercent) || (a.price > 0 && a.discount > 0 ? (a.discount / a.price) * 100 : 0);
+              const discB = Number(b.discountPercent) || (b.price > 0 && b.discount > 0 ? (b.discount / b.price) * 100 : 0);
+              return discB - discA;
+            });
           } else if (type === 'new-releases') {
-            // Sort by createdAt descending
             data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
           } else if (type === 'best-selling') {
-            // Sort by rating descending
             data.sort((a, b) => (b.rating || 4.5) - (a.rating || 4.5));
           }
           
-          setBooks(data.slice(0, 12)); // limit to 12 items for this showcase page
+          setBooks(data);
         }
       } catch (err) {
         console.error("Error fetching special collection:", err);
@@ -135,22 +145,46 @@ export default function SpecialListsPage({ type }) {
             {config.title}
           </h1>
         </div>
-        <p className="text-slate-400 leading-relaxed text-sm sm:text-base max-w-3xl">
-          {config.tagline}
-        </p>
+      </div>
+      {/* Filter and Count Sub-bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-2 border-b border-white/5 pb-4">
+        <div>
+          <p className="text-sm font-medium text-slate-300 light:text-slate-700">
+            {type === 'offers' ? (
+              <span>Over <strong className="text-amber-400 font-bold">{books.length}+ Books</strong> Available Here, Find It Now</span>
+            ) : (
+              <span>Over <strong className="text-brand-400 font-bold">{books.length} Books</strong> Available in this Collection</span>
+            )}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-xs text-slate-400">
+            <span>Showing</span>
+            <select
+              value={itemsLimit}
+              onChange={(e) => setItemsLimit(Number(e.target.value))}
+              className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-slate-200 light:bg-white light:border-slate-300 light:text-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"
+            >
+              <option value={20} className="bg-slate-900 text-white">20 items</option>
+              <option value={50} className="bg-slate-900 text-white">50 items</option>
+              <option value={100} className="bg-slate-900 text-white">100 items</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Grid listing */}
       <div className="space-y-8">
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3, 4, 5, 6].map((s) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
               <div key={s} className="h-[450px] rounded-2xl border border-white/5 bg-white/5 shimmer" />
             ))}
           </div>
         ) : books.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {books.map((book) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {books.slice(0, itemsLimit).map((book) => (
               <BookCard key={book._id} book={book} />
             ))}
           </div>

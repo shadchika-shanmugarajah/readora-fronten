@@ -195,6 +195,17 @@ export default function BookDetails() {
 
   const cleanSlug = (text) => text ? text.toLowerCase().replace(/[^a-z0-9]/g, '-') : '';
 
+  const originalPrice = Number(book.price || 0);
+  const discountAmount = Number(book.discount || 0);
+  let discountPercent = Number(book.discountPercent || 0);
+  if (!discountPercent && originalPrice > 0 && discountAmount > 0) {
+    discountPercent = Math.round((discountAmount / originalPrice) * 100);
+  }
+  const hasDiscount = discountAmount > 0 || discountPercent > 0;
+  const finalPrice = hasDiscount
+    ? Math.max(0, discountAmount > 0 ? (originalPrice - discountAmount) : Math.round(originalPrice * (1 - discountPercent / 100)))
+    : originalPrice;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-screen space-y-16">
       <SEO 
@@ -219,67 +230,90 @@ export default function BookDetails() {
 
       {/* Book Metadata Grid */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-12 items-start">
-        {/* Cover Preview (3D interaction) */}
-        <div className="md:col-span-5 flex justify-center md:sticky md:top-28">
-          <div 
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-            style={{
-              transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
-              transition: 'transform 0.1s ease-out',
-              transformStyle: 'preserve-3d',
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden'
-            }}
-            className="w-72 sm:w-80 h-[450px] sm:h-[500px] rounded-2xl overflow-hidden bg-slate-950/40 light:bg-slate-100/60 flex items-center justify-center border border-white/10 light:border-slate-200 shadow-3d-glow transform-gpu"
-          >
-            <img 
-              src={book.coverImage} 
-              alt={book.title} 
-              className="w-full h-full object-contain"
-            />
-          </div>
-        </div>
-
-        {/* Specifications & Purchasing details */}
-        <div className="md:col-span-7 space-y-8">
-          <div className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              <span className="px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-wider bg-brand-600/20 text-brand-400 border border-brand-500/30">
-                {book.category}
-              </span>
-              <span className="px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-wider bg-purple-600/20 text-purple-400 border border-purple-500/30">
-                {book.language || 'English'}
-              </span>
-            </div>
-            <h1 className="text-3xl sm:text-5xl font-bold font-display tracking-tight text-slate-100 light:text-slate-950 mt-2">
-              {book.title}
-            </h1>
-            <p className="text-lg text-slate-400 light:text-slate-500 font-medium">
-              by <span className="text-brand-400">{book.author}</span>
-            </p>
-            
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1 text-amber-400">
-                <Star className="h-4.5 w-4.5 fill-current" />
-                <span className="font-bold text-slate-200 light:text-slate-800">{book.rating || '4.5'}</span>
+            {/* Cover Preview (3D interaction) */}
+            <div className="md:col-span-5 flex justify-center md:sticky md:top-28">
+              <div 
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+                style={{
+                  transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
+                  transition: 'transform 0.1s ease-out',
+                  transformStyle: 'preserve-3d',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden'
+                }}
+                className="relative w-72 sm:w-80 h-[450px] sm:h-[500px] rounded-2xl overflow-hidden bg-slate-950/40 light:bg-slate-100/60 flex items-center justify-center border border-white/10 light:border-slate-200 shadow-3d-glow transform-gpu"
+              >
+                {hasDiscount && (
+                  <div className="absolute top-0 left-0 z-10">
+                    <div className="bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-slate-950 font-black text-xs tracking-wider py-1.5 px-4 rounded-br-2xl shadow-xl border-r border-b border-amber-300/40">
+                      {discountPercent}% OFF
+                    </div>
+                  </div>
+                )}
+                <img 
+                  src={book.coverImage} 
+                  alt={book.title} 
+                  className="w-full h-full object-contain"
+                />
               </div>
-              <span className="text-slate-600">|</span>
-              <span className={`text-xs font-bold ${book.stock > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                {book.stock > 0 ? `In Stock (${book.stock} left)` : 'Out of Stock'}
-              </span>
             </div>
-          </div>
 
-          <div className="p-6 rounded-2xl glass-card border border-white/5 space-y-4">
-            <div className="text-3xl font-bold font-display text-slate-100 light:text-slate-950">
-              {book.price.toLocaleString()} LKR
-            </div>
-            
-            <p className="text-sm text-slate-400 light:text-slate-600 leading-relaxed">
-              {book.description}
-            </p>
-          </div>
+            {/* Specifications & Purchasing details */}
+            <div className="md:col-span-7 space-y-8">
+              <div className="space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-wider bg-brand-600/20 text-brand-400 border border-brand-500/30">
+                    {book.category}
+                  </span>
+                  <span className="px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-wider bg-purple-600/20 text-purple-400 border border-purple-500/30">
+                    {book.language || 'English'}
+                  </span>
+                </div>
+                <h1 className="text-3xl sm:text-5xl font-bold font-display tracking-tight text-slate-100 light:text-slate-950 mt-2">
+                  {book.title}
+                </h1>
+                <p className="text-lg text-slate-400 light:text-slate-500 font-medium">
+                  by <span className="text-brand-400">{book.author}</span>
+                </p>
+                
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1 text-amber-400">
+                    <Star className="h-4.5 w-4.5 fill-current" />
+                    <span className="font-bold text-slate-200 light:text-slate-800">{book.rating || '4.5'}</span>
+                  </div>
+                  <span className="text-slate-600">|</span>
+                  <span className={`text-xs font-bold ${book.stock > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {book.stock > 0 ? `In Stock (${book.stock} left)` : 'Out of Stock'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-6 rounded-2xl glass-card border border-white/5 space-y-4">
+                <div className="flex flex-wrap items-baseline gap-3">
+                  {hasDiscount ? (
+                    <>
+                      <span className="text-3xl sm:text-4xl font-extrabold font-display text-[#38bdf8] light:text-[#0284c7]">
+                        {finalPrice.toLocaleString()} LKR
+                      </span>
+                      <span className="text-lg text-slate-400 line-through font-medium">
+                        {originalPrice.toLocaleString()} LKR
+                      </span>
+                      <span className="px-3 py-1 rounded-full text-xs font-black bg-amber-500/10 border border-amber-500/30 text-amber-400">
+                        Save {discountPercent}% ({(originalPrice - finalPrice).toLocaleString()} LKR)
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-3xl font-bold font-display text-slate-100 light:text-slate-950">
+                      {originalPrice.toLocaleString()} LKR
+                    </span>
+                  )}
+                </div>
+                
+                <p className="text-sm text-slate-400 light:text-slate-600 leading-relaxed">
+                  {book.description}
+                </p>
+              </div>
 
           {/* Specifications Table */}
           <div className="p-6 rounded-2xl glass-card border border-white/5 space-y-6">

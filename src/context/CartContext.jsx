@@ -35,6 +35,17 @@ export const CartProvider = ({ children }) => {
     const existingItemIndex = cartItems.findIndex(item => item._id === book._id);
     let newItems = [...cartItems];
 
+    const originalPrice = Number(book.price || 0);
+    const discountAmount = Number(book.discount || 0);
+    let discountPercent = Number(book.discountPercent || 0);
+    if (!discountPercent && originalPrice > 0 && discountAmount > 0) {
+      discountPercent = Math.round((discountAmount / originalPrice) * 100);
+    }
+    const hasDiscount = discountAmount > 0 || discountPercent > 0;
+    const finalPrice = hasDiscount
+      ? Math.max(0, discountAmount > 0 ? (originalPrice - discountAmount) : Math.round(originalPrice * (1 - discountPercent / 100)))
+      : originalPrice;
+
     if (existingItemIndex > -1) {
       newItems[existingItemIndex].quantity += quantity;
       showToast(`Updated quantity of "${book.title}" in your bag!`);
@@ -43,7 +54,10 @@ export const CartProvider = ({ children }) => {
         _id: book._id,
         title: book.title,
         author: book.author,
-        price: book.price,
+        price: finalPrice,
+        originalPrice: originalPrice,
+        discount: originalPrice - finalPrice,
+        discountPercent: discountPercent,
         coverImage: book.coverImage,
         quantity
       });
@@ -82,6 +96,8 @@ export const CartProvider = ({ children }) => {
 
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
   const cartTotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const cartOriginalTotal = cartItems.reduce((total, item) => total + ((item.originalPrice || item.price) * item.quantity), 0);
+  const cartDiscountSavings = Math.max(0, cartOriginalTotal - cartTotal);
 
   return (
     <CartContext.Provider value={{
@@ -92,6 +108,8 @@ export const CartProvider = ({ children }) => {
       clearCart,
       cartCount,
       cartTotal,
+      cartOriginalTotal,
+      cartDiscountSavings,
       toast,
       showToast
     }}>

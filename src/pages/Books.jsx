@@ -48,7 +48,7 @@ export default function Books() {
                 if (idxB === -1) idxB = 999;
                 return idxA - idxB;
               });
-            setCategories(['All', ...sortedNames]);
+            setCategories(['All', 'Special Offers', ...sortedNames]);
           }
         }
       } catch (err) {

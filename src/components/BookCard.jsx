@@ -64,6 +64,18 @@ export default function BookCard({ book }) {
     addToCart(book);
   };
 
+  // Discount & Final Price calculations
+  const originalPrice = Number(book.price || 0);
+  const discountAmount = Number(book.discount || 0);
+  let discountPercent = Number(book.discountPercent || 0);
+  if (!discountPercent && originalPrice > 0 && discountAmount > 0) {
+    discountPercent = Math.round((discountAmount / originalPrice) * 100);
+  }
+  const hasDiscount = discountAmount > 0 || discountPercent > 0;
+  const finalPrice = hasDiscount
+    ? Math.max(0, discountAmount > 0 ? (originalPrice - discountAmount) : Math.round(originalPrice * (1 - discountPercent / 100)))
+    : originalPrice;
+
   return (
     <div 
       ref={cardRef}
@@ -89,6 +101,16 @@ export default function BookCard({ book }) {
             className="w-full h-full object-contain transform group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
           />
+
+          {/* Discount Badge on Cover Image */}
+          {hasDiscount && (
+            <div className="absolute top-0 left-0 z-10">
+              <div className="bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-slate-950 font-black text-[11px] tracking-wider py-1 px-2.5 rounded-br-xl shadow-lg border-r border-b border-amber-300/40 flex items-center gap-1">
+                <span>{discountPercent}% OFF</span>
+              </div>
+            </div>
+          )}
+
           {/* Overlay Actions on Hover */}
           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
             <Link 
@@ -117,7 +139,7 @@ export default function BookCard({ book }) {
           </button>
           
           {/* Category Tag */}
-          <span className="absolute top-3 left-3 px-2.5 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wider bg-brand-600/90 text-white backdrop-blur-md">
+          <span className={`absolute ${hasDiscount ? 'top-8 left-2' : 'top-3 left-3'} px-2.5 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wider bg-brand-600/90 text-white backdrop-blur-md`}>
             {book.category}
           </span>
 
@@ -138,9 +160,22 @@ export default function BookCard({ book }) {
             </p>
           </div>
           
-          <div className="flex items-center justify-between mt-3">
-            <div className="text-xl font-bold text-slate-100 light:text-slate-950 font-display">
-              {book.price.toLocaleString()} LKR
+          <div className="flex items-end justify-between mt-3">
+            <div>
+              {hasDiscount ? (
+                <div className="flex flex-col">
+                  <span className="text-xs line-through text-slate-400 font-medium tracking-tight">
+                    {originalPrice.toLocaleString()} LKR
+                  </span>
+                  <span className="text-xl font-bold text-[#38bdf8] light:text-[#0284c7] font-display leading-tight">
+                    {finalPrice.toLocaleString()} LKR
+                  </span>
+                </div>
+              ) : (
+                <div className="text-xl font-bold text-slate-100 light:text-slate-950 font-display">
+                  {originalPrice.toLocaleString()} LKR
+                </div>
+              )}
             </div>
             {book.stock <= 3 && book.stock > 0 ? (
               <span className="text-[10px] text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full font-bold">
@@ -149,6 +184,10 @@ export default function BookCard({ book }) {
             ) : book.stock === 0 ? (
               <span className="text-[10px] text-slate-400 bg-slate-500/10 border border-slate-500/20 px-2 py-0.5 rounded-full font-bold">
                 Out of Stock
+              </span>
+            ) : hasDiscount ? (
+              <span className="text-[10px] font-extrabold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                Save {(originalPrice - finalPrice).toLocaleString()} LKR
               </span>
             ) : null}
           </div>
