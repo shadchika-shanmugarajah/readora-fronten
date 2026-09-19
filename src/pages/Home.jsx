@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ChevronLeft, ChevronRight, BookOpen, Star } from 'lucide-react';
 import BookCard from '../components/BookCard';
+import AuthorCarousel from '../components/AuthorCarousel';
+import PublisherCarousel from '../components/PublisherCarousel';
 import SEO from '../components/SEO';
 import { API_BASE_URL } from '../config';
 
@@ -280,6 +282,12 @@ export default function Home() {
           </div>
         )}
       </section>
+
+      {/* Discover Great Authors Section */}
+      <AuthorCarousel />
+
+      {/* Discover Great Publishers Section */}
+      <PublisherCarousel />
 
       {/* About Us Summary Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-white/5 pt-20 pb-10">

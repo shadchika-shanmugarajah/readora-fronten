@@ -12,6 +12,8 @@ export default function BookManagement() {
   // Data State
   const [books, setBooks] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [authorsList, setAuthorsList] = useState([]);
+  const [publishersList, setPublishersList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -95,9 +97,37 @@ export default function BookManagement() {
     }
   };
 
+  // Fetch authors for datalist suggestions
+  const fetchAuthors = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/authors`);
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setAuthorsList(data);
+      }
+    } catch (err) {
+      console.warn('Failed to load authors', err);
+    }
+  };
+
+  // Fetch publishers for datalist suggestions
+  const fetchPublishers = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/publishers`);
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setPublishersList(data);
+      }
+    } catch (err) {
+      console.warn('Failed to load publishers', err);
+    }
+  };
+
   useEffect(() => {
     fetchBooks();
     fetchCategories();
+    fetchAuthors();
+    fetchPublishers();
   }, [token]);
 
   // Flash toast alert messages helper
@@ -758,11 +788,17 @@ export default function BookManagement() {
                     <input
                       type="text"
                       required
+                      list="authors-datalist"
                       value={formFields.author}
                       onChange={(e) => setFormFields(prev => ({ ...prev, author: e.target.value }))}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/50"
                       placeholder="e.g. Martin Wickramasinghe"
                     />
+                    <datalist id="authors-datalist">
+                      {authorsList.map(a => (
+                        <option key={a._id} value={a.name} />
+                      ))}
+                    </datalist>
                   </div>
 
                 </div>
@@ -964,11 +1000,17 @@ export default function BookManagement() {
                     <label className="font-bold text-slate-400 uppercase tracking-wider">Publisher</label>
                     <input
                       type="text"
+                      list="publishers-datalist"
                       value={formFields.publisher}
                       onChange={(e) => setFormFields(prev => ({ ...prev, publisher: e.target.value }))}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none"
                       placeholder="Sarasavi Publishers"
                     />
+                    <datalist id="publishers-datalist">
+                      {publishersList.map(p => (
+                        <option key={p._id} value={p.name} />
+                      ))}
+                    </datalist>
                   </div>
                   {/* Pages */}
                   <div className="space-y-1">

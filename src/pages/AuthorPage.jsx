@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowLeft, User, BookOpen, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, User, BookOpen } from 'lucide-react';
 import BookCard from '../components/BookCard';
 import SEO from '../components/SEO';
 import { API_BASE_URL } from '../config';
 
-// Custom rich biographies for notable authors
 const AUTHOR_BIOS = {
   'kalki-krishnamurthy': {
     name: 'Kalki Krishnamurthy',
@@ -30,120 +28,101 @@ const AUTHOR_BIOS = {
 
 export default function AuthorPage() {
   const { slug } = useParams();
+  const [author, setAuthor] = useState(null);
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [authorName, setAuthorName] = useState('');
 
   useEffect(() => {
-    const fetchAuthorBooks = async () => {
+    const fetchAuthorData = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${API_BASE_URL}/books/author/${slug}`);
-        if (res.ok) {
-          const data = await res.json();
-          setBooks(data);
-          if (data.length > 0) {
-            setAuthorName(data[0].author);
-          } else {
-            // Reconstruct name from slug as fallback
-            const name = slug
-              .split('-')
-              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-              .join(' ');
-            setAuthorName(name);
+        // Fetch author profile
+        let fetchedAuthor = null;
+        try {
+          const authorRes = await fetch(`${API_BASE_URL}/authors/${slug}`);
+          if (authorRes.ok) {
+            fetchedAuthor = await authorRes.json();
           }
+        } catch (err) {
+          console.warn("Could not fetch author profile:", err);
         }
+
+        // Fetch books by author
+        const booksRes = await fetch(`${API_BASE_URL}/books/author/${slug}`);
+        let fetchedBooks = [];
+        if (booksRes.ok) {
+          fetchedBooks = await booksRes.json();
+        }
+
+        // Determine author info with fallbacks
+        const authorKey = slug ? slug.toLowerCase().trim() : '';
+        const fallback = AUTHOR_BIOS[authorKey] || {};
+        const inferredName = fetchedBooks.length > 0 
+          ? fetchedBooks[0].author 
+          : slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+
+        const finalAuthor = {
+          name: fetchedAuthor?.name || fallback.name || inferredName,
+          role: fallback.role || 'Distinguished Author',
+          bio: fetchedAuthor?.bio || fallback.bio || `Discover literature and titles written by ${inferredName}, available for fast online ordering and island-wide delivery across Sri Lanka from Readora.lk.`,
+          image: fetchedAuthor?.image || fallback.image || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
+        };
+
+        setAuthor(finalAuthor);
+        setBooks(fetchedBooks);
       } catch (err) {
-        console.error("Error fetching books by author:", err);
+        console.error("Error fetching author data:", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchAuthorBooks();
+
+    fetchAuthorData();
   }, [slug]);
 
-  const authorKey = slug ? slug.toLowerCase().trim() : '';
-  const customAuthor = AUTHOR_BIOS[authorKey] || {
-    name: authorName,
-    role: 'Distinguished Author',
-    bio: `Discover literature and titles written by ${authorName || 'this author'}, available for fast online ordering and island-wide delivery across Sri Lanka from Readora.lk.`,
-    image: 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=600'
-  };
-
-  const finalName = authorName || customAuthor.name;
-
-  const getSchemaMarkup = () => {
-    return {
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "Person",
-          "@id": `https://readora.lk/authors/${slug}#person`,
-          "name": finalName,
-          "description": customAuthor.bio,
-          "mainEntityOfPage": `https://readora.lk/authors/${slug}`,
-          "jobTitle": customAuthor.role
-        },
-        {
-          "@type": "BreadcrumbList",
-          "@id": `https://readora.lk/authors/${slug}#breadcrumb`,
-          "itemListElement": [
-            {
-              "@type": "ListItem",
-              "position": 1,
-              "name": "Home",
-              "item": "https://readora.lk"
-            },
-            {
-              "@type": "ListItem",
-              "position": 2,
-              "name": "Authors",
-              "item": "https://readora.lk/books"
-            },
-            {
-              "@type": "ListItem",
-              "position": 3,
-              "name": finalName,
-              "item": `https://readora.lk/authors/${slug}`
-            }
-          ]
-        }
-      ]
-    };
-  };
+  const displayName = author?.name || 'Author';
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-screen space-y-12">
       <SEO 
-        title={`Books by ${finalName}`}
-        description={`Explore the collection of books written by ${finalName} on Readora.lk. Find biographies, novels, and educational guides with express delivery in Sri Lanka.`}
+        title={`Books by ${displayName}`}
+        description={`Explore the collection of books written by ${displayName} on Readora.lk. Find novels, educational guides, and literature with express delivery in Sri Lanka.`}
         canonicalUrl={`https://readora.lk/authors/${slug}`}
-        ogImage={customAuthor.image}
+        ogImage={author?.image}
         ogType="profile"
-        schemaMarkup={getSchemaMarkup()}
       />
 
       {/* Back link */}
       <div>
         <Link 
-          to="/books" 
-          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-400 hover:text-slate-200 transition-colors"
+          to="/" 
+          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-400 hover:text-brand-400 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>Back to Catalog</span>
+          <span>Back to Authors</span>
         </Link>
       </div>
 
       {/* Author Card header */}
       <div className="p-8 sm:p-10 rounded-3xl glass-card border border-white/5 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-        {/* Profile icon/image */}
+        {/* Profile circular avatar */}
         <div className="md:col-span-3 flex justify-center">
-          <div className="w-40 h-40 rounded-2xl overflow-hidden bg-slate-900 border border-white/10 flex items-center justify-center shadow-3d-glow">
-            {customAuthor.image ? (
-              <img src={customAuthor.image} alt={finalName} className="w-full h-full object-cover" />
-            ) : (
-              <User className="h-16 w-16 text-slate-500" />
-            )}
+          <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-full overflow-hidden p-1.5 bg-gradient-to-tr from-brand-600 via-slate-800 to-purple-600 shadow-3d-glow">
+            <div className="w-full h-full rounded-full overflow-hidden bg-slate-900 border border-white/10 flex items-center justify-center">
+              {author?.image ? (
+                <img 
+                  src={author.image} 
+                  alt={displayName} 
+                  className="w-full h-full object-cover" 
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80';
+                  }}
+                />
+              ) : (
+                <User className="h-16 w-16 text-slate-500" />
+              )}
+            </div>
           </div>
         </div>
 
@@ -151,14 +130,14 @@ export default function AuthorPage() {
         <div className="md:col-span-9 space-y-4 text-center md:text-left">
           <div>
             <span className="px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-wider bg-brand-600/20 text-brand-400 border border-brand-500/30">
-              {customAuthor.role}
+              {author?.role || 'Author'}
             </span>
             <h1 className="text-3xl sm:text-5xl font-bold font-display tracking-tight text-slate-100 light:text-slate-900 mt-2">
-              {finalName}
+              {displayName}
             </h1>
           </div>
           <p className="text-slate-400 leading-relaxed text-sm sm:text-base">
-            {customAuthor.bio}
+            {author?.bio}
           </p>
         </div>
       </div>
@@ -168,10 +147,10 @@ export default function AuthorPage() {
         <div>
           <h2 className="text-2xl font-bold font-display text-slate-200 flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-brand-400" />
-            <span>Literature Bibliography</span>
+            <span>Books</span>
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Browse and buy all {books.length} available books by {finalName}
+            Browse and buy all {books.length} available books by {displayName}
           </p>
         </div>
 
@@ -189,7 +168,7 @@ export default function AuthorPage() {
           </div>
         ) : (
           <div className="text-center py-16 glass-card p-10 flex flex-col items-center justify-center border border-white/5">
-            <User className="h-12 w-12 text-slate-500 mb-4 animate-bounce" />
+            <User className="h-12 w-12 text-slate-500 mb-4" />
             <h3 className="text-lg font-bold text-slate-300">No books found</h3>
             <p className="text-xs text-slate-400 mt-1">
               Currently there are no catalog entries listed under this writer. Check back soon.
