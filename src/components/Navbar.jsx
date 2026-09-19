@@ -240,13 +240,13 @@ export default function Navbar() {
 
   return (
     <nav className="sticky top-0 z-40 w-full glass-panel transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-24 gap-2 lg:gap-4">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
+        <div className="flex items-center justify-between h-24 gap-2 lg:gap-3 xl:gap-4">
           {/* Logo */}
           <div className="flex items-center shrink-0">
-            <Link to="/" className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-1.5 sm:gap-2">
               {/* Emblem Logo */}
-              <div className="h-10 w-12 sm:h-14 sm:w-16 lg:h-16 lg:w-20 overflow-hidden flex items-center justify-center shrink-0">
+              <div className="h-10 w-10 sm:h-12 sm:w-14 lg:h-12 lg:w-14 xl:h-14 xl:w-16 overflow-hidden flex items-center justify-center shrink-0">
                 <img 
                   src="/readaura_emblem.png" 
                   alt="ReadAura Emblem" 
@@ -259,7 +259,7 @@ export default function Navbar() {
               </div>
 
               {/* Text Logo */}
-              <div className="flex h-10 w-28 sm:h-14 sm:w-42 lg:h-16 lg:w-48 overflow-hidden flex items-center justify-center shrink-0">
+              <div className="flex h-10 w-24 sm:h-12 sm:w-32 lg:h-12 lg:w-32 xl:h-14 xl:w-40 overflow-hidden flex items-center justify-center shrink-0">
                 <img 
                   src="/readaura_text_logo.png" 
                   alt="ReadAura Text" 
@@ -274,7 +274,7 @@ export default function Navbar() {
           </div>
 
           {/* Desktop Nav Links */}
-          <div className="hidden lg:flex items-center space-x-6 ml-6 text-sm font-semibold shrink-0 whitespace-nowrap">
+          <div className="hidden lg:flex items-center space-x-2.5 xl:space-x-5 ml-2 xl:ml-5 text-sm font-semibold shrink-0 whitespace-nowrap">
             <Link 
               to="/" 
               className={`transition-colors duration-200 ${isActive('/') ? 'text-brand-400' : 'text-slate-300 hover:text-white light:text-slate-200 light:hover:text-white'}`}
@@ -299,50 +299,54 @@ export default function Navbar() {
             >
               About Us
             </Link>
-            {/* Navigation links ended here */}
           </div>
 
           {/* Large Centered Search Bar (Desktop) */}
-          <form ref={navbarSearchRef} onSubmit={handleSearchSubmit} className="hidden md:flex flex-grow max-w-lg mx-3 lg:mx-6 relative items-center">
+          <form 
+            ref={navbarSearchRef} 
+            onSubmit={handleSearchSubmit} 
+            className="hidden md:flex flex-1 min-w-[160px] sm:min-w-[180px] lg:min-w-[200px] xl:min-w-[280px] max-w-lg mx-2 lg:mx-3 xl:mx-4 relative items-center"
+          >
             <input
               type="text"
               placeholder="Search Books..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-5 py-2.5 pr-12 rounded-full bg-white/5 border border-white/10 text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/50 shadow-inner text-sm transition-all duration-300"
+              className="w-full px-4 sm:px-5 py-2 sm:py-2.5 pr-10 sm:pr-12 rounded-full bg-white/5 border border-white/10 text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/50 shadow-inner text-sm transition-all duration-300"
             />
-            <button type="submit" className="absolute right-4 text-slate-400 hover:text-brand-400 transition-colors">
+            <button type="submit" className="absolute right-3.5 sm:right-4 text-slate-400 hover:text-brand-400 transition-colors">
               <Search className="h-4.5 w-4.5" />
             </button>
             {renderSuggestions()}
           </form>
 
           {/* Action Buttons (Desktop) */}
-          <div className="hidden md:flex items-center space-x-3 lg:space-x-6 shrink-0">
+          <div className="hidden md:flex items-center space-x-2 xl:space-x-4 shrink-0 whitespace-nowrap">
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-full bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:scale-110 active:scale-95 transition-all duration-200"
+              className="p-2 sm:p-2.5 rounded-full bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:scale-110 active:scale-95 transition-all duration-200 shrink-0"
               aria-label="Toggle Theme"
             >
-              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              {theme === 'dark' ? <Sun className="h-4.5 w-4.5 sm:h-5 sm:w-5" /> : <Moon className="h-4.5 w-4.5 sm:h-5 sm:w-5" />}
             </button>
 
-            {/* Account */}
+            {/* Account / Customer Name */}
             {user ? (
               <Link
                 to="/profile"
-                className="flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors"
+                className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-brand-400 hover:text-brand-300 transition-colors shrink-0"
+                title={`Signed in as ${user.name}`}
               >
-                <User className="h-4.5 w-4.5" />
-                <span>My Profile</span>
+                <User className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-brand-400" />
+                <span className="max-w-[100px] xl:max-w-[140px] truncate">{user.name || 'Account'}</span>
               </Link>
             ) : (
               <Link
                 to="/login"
-                className="flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors"
+                className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-300 hover:text-white transition-colors shrink-0"
               >
-                <User className="h-4.5 w-4.5" />
+                <User className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
                 <span>Account</span>
               </Link>
             )}
@@ -350,18 +354,18 @@ export default function Navbar() {
             {/* Wishlist */}
             <Link
               to="/books?wishlist=true"
-              className="flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors"
+              className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-300 hover:text-white transition-colors shrink-0"
             >
-              <Heart className={`h-4.5 w-4.5 text-rose-500 ${wishlistCount > 0 ? 'fill-rose-500' : 'fill-rose-500/20'}`} />
+              <Heart className={`h-4 w-4 sm:h-4.5 sm:w-4.5 text-rose-500 ${wishlistCount > 0 ? 'fill-rose-500' : 'fill-rose-500/20'}`} />
               <span>Wishlist({wishlistCount})</span>
             </Link>
 
             {/* Cart Bag */}
             <Link
               to="/cart"
-              className="relative flex items-center gap-2 px-4 py-2 rounded-full bg-brand-600 hover:bg-brand-505 text-white font-bold text-sm transition-all shadow-md shadow-brand-600/10 active:scale-95"
+              className="shrink-0 relative flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-full bg-brand-600 hover:bg-brand-505 text-white font-bold text-xs sm:text-sm transition-all shadow-md shadow-brand-600/10 active:scale-95"
             >
-              <ShoppingBag className="h-4.5 w-4.5" />
+              <ShoppingBag className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
               <span>Bag({cartCount})</span>
             </Link>
           </div>
@@ -466,7 +470,7 @@ export default function Navbar() {
               className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-purple-600 text-white font-medium text-base"
             >
               <User className="h-5 w-5" />
-              <span>My Profile ({user.name})</span>
+              <span>{user.name}</span>
             </Link>
           ) : (
             <Link

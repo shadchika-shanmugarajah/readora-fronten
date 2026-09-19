@@ -323,35 +323,6 @@ Please update the order status.`;
 
           {/* Removed Admin Dashboard Quick Link */}
 
-          {/* Customer Reading History progress */}
-          {user.role !== 'admin' && (
-            <div className="glass-card p-6 border border-white/5 space-y-4 shadow-sm">
-              <h3 className="text-sm font-bold text-slate-200 light:text-slate-800 flex items-center gap-2 uppercase tracking-wide">
-                <BookOpen className="h-4 w-4 text-brand-400" />
-                <span>Reading Progress</span>
-              </h3>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs">
-                    <span className="font-semibold text-slate-300 light:text-slate-700 truncate max-w-[70%]">Atomic Habits</span>
-                    <span className="text-slate-400 shrink-0">45%</span>
-                  </div>
-                  <div className="w-full bg-white/5 light:bg-slate-200 h-2 rounded-full overflow-hidden">
-                    <div className="bg-gradient-to-r from-brand-500 to-purple-600 h-full rounded-full" style={{ width: '45%' }} />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs">
-                    <span className="font-semibold text-slate-300 light:text-slate-700 truncate max-w-[70%]">The Psychology of Money</span>
-                    <span className="text-slate-400 shrink-0">70%</span>
-                  </div>
-                  <div className="w-full bg-white/5 light:bg-slate-200 h-2 rounded-full overflow-hidden">
-                    <div className="bg-gradient-to-r from-brand-500 to-purple-600 h-full rounded-full" style={{ width: '70%' }} />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Customer Wishlist Summary */}
           {user.role !== 'admin' && (

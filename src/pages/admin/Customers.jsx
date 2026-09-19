@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Users, Search, ShieldAlert, Check, X, Shield, ShieldCheck, 
-  RefreshCw, Ban, UserCheck, AlertTriangle
+  RefreshCw, Ban, UserCheck, AlertTriangle, Clock, ShoppingBag,
+  Calendar, MapPin, Mail, Package, CreditCard
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../config';
@@ -25,6 +26,34 @@ export default function Customers() {
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [targetRole, setTargetRole] = useState('user');
   const [savingRole, setSavingRole] = useState(false);
+
+  // Customer Order History state
+  const [historyUser, setHistoryUser] = useState(null);
+  const [historyOrders, setHistoryOrders] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+
+  const handleOpenHistory = async (user) => {
+    setHistoryUser(user);
+    setShowHistoryModal(true);
+    setLoadingHistory(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/orders/customer/${encodeURIComponent(user.phoneNumber)}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setHistoryOrders(Array.isArray(data) ? data : []);
+      } else {
+        setHistoryOrders([]);
+      }
+    } catch (err) {
+      console.error("Failed to fetch customer orders:", err);
+      setHistoryOrders([]);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   const fetchCustomers = async () => {
     setLoading(true);
@@ -305,6 +334,15 @@ export default function Customers() {
                     </td>
                     {/* Actions */}
                     <td className="p-4 text-right space-x-2">
+                      {/* View Customer Order History */}
+                      <button
+                        onClick={() => handleOpenHistory(c)}
+                        title="View Customer Orders & History"
+                        className="p-1.5 rounded-lg bg-brand-950/60 hover:bg-brand-900/80 text-brand-400 hover:text-brand-300 border border-brand-800/40 transition-all inline-flex items-center justify-center align-middle"
+                      >
+                        <Clock className="h-4 w-4" />
+                      </button>
+
                       {/* Block/Unblock toggle */}
                       {(c.role !== 'super_admin' && (loggedUser?.role === 'super_admin' || loggedUser?.role === 'admin')) && (
                         <>
@@ -435,6 +473,178 @@ export default function Customers() {
               </div>
 
             </form>
+
+          </div>
+        </div>
+      )}
+
+      {/* CUSTOMER ORDER HISTORY MODAL OVERLAY */}
+      {showHistoryModal && historyUser && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#0f172a] border border-slate-800 w-full max-w-2xl rounded-3xl shadow-2xl max-h-[90vh] flex flex-col overflow-hidden animate-scale-in">
+            
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-850 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-brand-500/10 border border-brand-500/20 text-brand-400">
+                  <Clock className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-slate-100 font-display">
+                    Customer History & Orders
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    {historyUser.name} • <span className="font-mono text-slate-300">{historyUser.phoneNumber}</span>
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => { setShowHistoryModal(false); setHistoryUser(null); }}
+                className="p-2 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Body - Scrollable */}
+            <div className="p-6 overflow-y-auto space-y-6 flex-1">
+              
+              {/* Customer Profile Summary */}
+              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-850 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider flex items-center gap-1">
+                    <UserCheck className="h-3 w-3 text-brand-400" /> Full Name
+                  </span>
+                  <p className="font-semibold text-slate-200 mt-0.5">{historyUser.name}</p>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider flex items-center gap-1">
+                    <Phone className="h-3 w-3 text-brand-400" /> Phone Contact
+                  </span>
+                  <p className="font-semibold text-slate-200 mt-0.5 font-mono">{historyUser.phoneNumber}</p>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider flex items-center gap-1">
+                    <MapPin className="h-3 w-3 text-brand-400" /> Delivery Address
+                  </span>
+                  <p className="font-semibold text-slate-200 mt-0.5">{historyUser.address || 'No address set'}</p>
+                </div>
+              </div>
+
+              {/* Order Stats Overview */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-slate-950/40 border border-slate-850 p-3.5 rounded-2xl">
+                  <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Total Orders</span>
+                  <h4 className="text-lg font-black text-slate-100 mt-0.5">{historyOrders.length}</h4>
+                </div>
+                <div className="bg-slate-950/40 border border-slate-850 p-3.5 rounded-2xl">
+                  <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Total Spent</span>
+                  <h4 className="text-lg font-black text-emerald-400 mt-0.5">
+                    LKR {historyOrders
+                      .filter(o => o.status !== 'cancelled')
+                      .reduce((sum, o) => sum + (Number(o.totalPrice) || 0), 0)
+                      .toLocaleString()}
+                  </h4>
+                </div>
+                <div className="bg-slate-950/40 border border-slate-850 p-3.5 rounded-2xl">
+                  <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Completed</span>
+                  <h4 className="text-lg font-black text-brand-400 mt-0.5">
+                    {historyOrders.filter(o => o.status === 'completed').length}
+                  </h4>
+                </div>
+              </div>
+
+              {/* Order Records List */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <Package className="h-3.5 w-3.5 text-brand-400" />
+                  <span>Order Records ({historyOrders.length})</span>
+                </h4>
+
+                {loadingHistory ? (
+                  <div className="p-8 text-center text-xs text-slate-500 space-y-2">
+                    <RefreshCw className="h-5 w-5 animate-spin mx-auto text-brand-400" />
+                    <p>Loading customer order records...</p>
+                  </div>
+                ) : historyOrders.length === 0 ? (
+                  <div className="p-8 rounded-2xl bg-slate-950/30 border border-slate-850/60 text-center text-xs text-slate-500 space-y-1">
+                    <ShoppingBag className="h-8 w-8 mx-auto text-slate-600 mb-2" />
+                    <p className="font-semibold text-slate-400">No orders placed yet</p>
+                    <p className="text-[11px]">This customer has not placed any orders through the store yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {historyOrders.map((order) => (
+                      <div 
+                        key={order._id}
+                        className="p-4 rounded-2xl bg-slate-950/60 border border-slate-850 space-y-3 text-xs"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-850/60">
+                          <div>
+                            <span className="font-mono font-bold text-brand-400 text-xs">
+                              #{order._id.slice(-6).toUpperCase()}
+                            </span>
+                            <span className="text-[10px] text-slate-500 ml-2">
+                              {new Date(order.createdAt).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase ${
+                              order.status === 'completed'
+                                ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/30'
+                                : order.status === 'cancelled'
+                                ? 'bg-rose-950 text-rose-400 border border-rose-900/30'
+                                : order.status === 'shipped'
+                                ? 'bg-sky-950 text-sky-400 border border-sky-900/30'
+                                : 'bg-amber-950 text-amber-400 border border-amber-900/30'
+                            }`}>
+                              {order.status}
+                            </span>
+                            <span className="font-bold text-slate-200 text-sm">
+                              LKR {(Number(order.totalPrice) || 0).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Items in order */}
+                        <div className="space-y-1.5">
+                          {order.items && order.items.map((item, i) => (
+                            <div key={i} className="flex items-center justify-between text-[11px] text-slate-300">
+                              <span className="truncate max-w-[300px]">
+                                {item.title || item.name || 'Book item'} <span className="text-slate-500 font-mono">× {item.quantity || 1}</span>
+                              </span>
+                              <span className="font-mono text-slate-400">
+                                LKR {((Number(item.price) || 0) * (item.quantity || 1)).toLocaleString()}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Footer: Payment info */}
+                        <div className="pt-2 border-t border-slate-850/40 flex items-center justify-between text-[10px] text-slate-500">
+                          <span>Payment: <strong className="text-slate-400 uppercase">{order.paymentMethod || 'COD'}</strong> ({order.paymentStatus || 'unpaid'})</span>
+                          {order.customerAddress && (
+                            <span className="truncate max-w-[250px] text-slate-400">📍 {order.customerAddress}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-850 flex justify-end shrink-0">
+              <button
+                type="button"
+                onClick={() => { setShowHistoryModal(false); setHistoryUser(null); }}
+                className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition-all"
+              >
+                Close History
+              </button>
+            </div>
 
           </div>
         </div>

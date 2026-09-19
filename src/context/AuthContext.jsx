@@ -166,8 +166,54 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const register = async (name, phoneNumber, address, email) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, phoneNumber, address, email })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setToken(data.token);
+        setUser(data.user);
+        localStorage.setItem('book_store_token', data.token);
+        localStorage.setItem('book_store_user', JSON.stringify(data.user));
+        setServerOnline(true);
+        setLoading(false);
+        return { success: true };
+      } else {
+        const errorData = await res.json();
+        setLoading(false);
+        return { success: false, message: errorData.message };
+      }
+    } catch (error) {
+      // Offline simulation
+      const mockUser = {
+        id: 'user_offline_' + Date.now(),
+        phoneNumber,
+        name: name.trim(),
+        address: address.trim(),
+        email: email ? email.trim() : '',
+        role: 'user'
+      };
+      const mockToken = 'mock_jwt_token_offline_' + Date.now();
+      setToken(mockToken);
+      setUser(mockUser);
+      localStorage.setItem('book_store_token', mockToken);
+      localStorage.setItem('book_store_user', JSON.stringify(mockUser));
+      setServerOnline(false);
+      setLoading(false);
+      return { success: true, isMock: true };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, serverOnline, login, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, token, loading, serverOnline, login, register, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );
