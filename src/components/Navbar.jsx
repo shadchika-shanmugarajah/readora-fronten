@@ -146,7 +146,7 @@ export default function Navbar() {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Books', path: '/books' },
-    { name: 'Special Offers 🔥', path: '/offers' },
+    { name: 'Offers & Deals 🔥', path: '/offers' },
     { name: 'Wishlist', path: '/books?wishlist=true' },
     { name: 'About Us', path: '/about' },
   ];
@@ -289,10 +289,9 @@ export default function Navbar() {
             </Link>
             <Link 
               to="/offers" 
-              className={`transition-colors duration-200 flex items-center gap-1.5 ${isActive('/offers') ? 'text-amber-400 font-bold' : 'text-amber-400/90 hover:text-amber-300 font-semibold'}`}
+              className={`transition-colors duration-200 ${isActive('/offers') ? 'text-amber-400 font-bold' : 'text-amber-400/90 hover:text-amber-300 font-semibold'}`}
             >
-              <span>Offers</span>
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">Deals</span>
+              Offers & Deals
             </Link>
             <Link 
               to="/about" 
@@ -423,7 +422,7 @@ export default function Navbar() {
               to="/offers"
               className="text-xs sm:text-sm font-extrabold tracking-wide text-amber-400 hover:text-amber-300 transition-colors shrink-0 px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center gap-1 shadow-sm"
             >
-              <span>🔥 Special Offers</span>
+              <span>🔥 Offers & Deals</span>
             </Link>
             <span className="text-slate-700 select-none px-1">|</span>
             {categories.map((cat, idx) => (
