@@ -24,8 +24,6 @@ export default function FloatingWhatsAppWidget() {
         Chat with Us
       </div>
 
-      {/* Pulsing Backlight Ring */}
-      <div className="absolute inset-0 rounded-full bg-emerald-500/30 blur-md animate-ping pointer-events-none" />
 
       {/* Floating Action Button */}
       <button
