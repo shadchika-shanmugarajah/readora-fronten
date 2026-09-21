@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import FloatingWhatsAppWidget from './FloatingWhatsAppWidget';
+import ChatbotWidget from './ChatbotWidget';
 
 export default function CustomerLayout() {
   return (
@@ -17,6 +18,9 @@ export default function CustomerLayout() {
 
       {/* Floating WhatsApp Chat Widget */}
       <FloatingWhatsAppWidget />
+
+      {/* Readora AI Assistant Chatbot Widget */}
+      <ChatbotWidget />
 
       {/* Footer Details */}
       <Footer />
